@@ -1,9 +1,11 @@
 {
-  "name": "simpleschedule",
+  "name": "easyday",
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "next build",
+    "build-and-start": "next build && npm run start"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -14,6 +16,7 @@
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "pug": "^3.0.2",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "next": "^13.5.8"
   }
 }

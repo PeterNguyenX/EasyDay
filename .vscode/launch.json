@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Open login.html",
-            "file": "/Users/peternguyen/Downloads/SimpleSchedule/routes/login.html"
+            "file": "/Users/peternguyen/Downloads/EasyDay/routes/login.html" // Ensure this path is correct
         }
     ]
 }

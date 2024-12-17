@@ -1,28 +1,39 @@
--- Users Table
+-- Create users table
 CREATE TABLE users (
-                       id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       username TEXT UNIQUE NOT NULL,
-                       password TEXT NOT NULL,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tasks Table
+-- Create tasks table
 CREATE TABLE tasks (
-                       id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       user_id INTEGER NOT NULL,
-                       date DATE NOT NULL,
-                       period TEXT NOT NULL,  -- 'morning', 'noon', 'night'
-                       content TEXT,
-                       FOREIGN KEY (user_id) REFERENCES users(id)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Projects Table
+-- Create projects table (if needed)
 CREATE TABLE projects (
-                          id INTEGER PRIMARY KEY AUTOINCREMENT,
-                          user_id INTEGER NOT NULL,
-                          name TEXT NOT NULL,
-                          deadline DATE NOT NULL,
-                          content TEXT,
-                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          FOREIGN KEY (user_id) REFERENCES users(id)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    deadline DATE,
+    content TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Create a table for storing user data (if needed)
+CREATE TABLE user_data (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    data TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );

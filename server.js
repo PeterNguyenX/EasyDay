@@ -9,36 +9,92 @@ const session = require('express-session');
 const app = express();
 
 // Database connection
-const db = new sqlite3.Database('db.sql');
+const db = new sqlite3.Database(':memory:');
 
 // Middleware
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'routes'))); // Add this line to serve static files from 'routes' directory
 app.use(session({
   secret: 'your-secret-key',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: true,
 }));
+
+// Create tables
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      date DATE NOT NULL,
+      time TIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      deadline DATE,
+      content TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE user_data (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      data TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
+});
 
 // Authentication middleware
 function isAuthenticated(req, res, next) {
   if (req.session.userId) {
     return next();
   } else {
-    res.status(401).json({ error: 'Unauthorized' });
+    res.redirect('/login.html');
   }
 }
 
 // Root route
 app.get('/', (req, res) => {
-  res.redirect('/login.html');
+  res.redirect('/index.html');
 });
 
-app.get('/login.html', (req, res) => {
+app.get('/index.html', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'routes', 'index.html'));
+});
+
+app.get('/login.html', (req, res) => { // Ensure this route is correct
   res.sendFile(path.join(__dirname, 'routes', 'login.html'));
+});
+
+app.get('/login', (req, res) => { // Add this route to handle /login
+  res.redirect('/login.html');
 });
 
 // Authentication routes
@@ -69,29 +125,27 @@ app.post('/api/login', (req, res) => {
   db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
     if (err) {
       res.status(500).json({ error: 'Server error' });
-      return;
-    }
-    if (!user) {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-    const match = await bcrypt.compare(password, user.password);
-    if (match) {
-      req.session.userId = user.id;
-      res.json({ success: true });
+    } else if (!user) {
+      res.status(400).json({ error: 'Invalid username or password' });
     } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+      const match = await bcrypt.compare(password, user.password);
+      if (match) {
+        req.session.userId = user.id;
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: 'Invalid username or password' });
+      }
     }
   });
 });
 
 // Task routes
 app.post('/api/tasks', isAuthenticated, (req, res) => {
-  const { date, period, content } = req.body;
+  const { title, description, date, time } = req.body;
   const userId = req.session.userId;
 
-  db.run('INSERT INTO tasks (user_id, date, period, content) VALUES (?, ?, ?, ?)',
-      [userId, date, period, content],
+  db.run('INSERT INTO tasks (user_id, title, description, date, time) VALUES (?, ?, ?, ?, ?)',
+      [userId, title, description, date, time],
       function(err) {
         if (err) {
           res.status(500).json({ error: 'Server error' });

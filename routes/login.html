@@ -1,621 +1,1041 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendar App</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    :root {
-      --morning-color: #fff3cd;
-      --noon-color: #ffe5d0;
-      --night-color: #cce5ff;
-      --weekend-bg: #f8f9fa;
-      --current-time-color: #dc3545;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyDay Calendar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0A192F;
+            --secondary: #172A46;
+            --accent: #64FFDA;
+            --text: #CCD6F6;
+            --card-bg: rgba(23, 42, 70, 0.8);
+            --morning: rgba(100, 255, 218, 0.2);
+            --noon: rgba(100, 255, 218, 0.15);
+            --night: rgba(100, 255, 218, 0.1);
+            --weekend: rgba(23, 42, 70, 0.9);
+            --weekend-text: #ffc400;
+        }
 
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      block-size: 100vh;
-      overflow: hidden;
-    }
-.highlight-week {
-  background-color: rgba(255, 0, 0, 0.2); /* Adjust the color and opacity as needed */
-}
-    .login-container {
-      max-inline-size: 400px;
-      margin: 100px auto;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      border-radius: 8px;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
 
-    .main-container {
-      display: none;
-      block-size: 100vh;
-      overflow: hidden;
-    }
+        body {
+            background: var(--primary);
+            color: var(--text);
+            min-block-size: 100vh;
+            overflow-x: hidden;
+        }
 
-    .calendar-container {
-      display: flex;
-      block-size: calc(100vh - 20px);
-      margin: 10px;
-    }
+        /* Authentication Pages */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+        }
 
-    .vertical-calendar {
-      inline-size: 75%;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      margin-inline-end: 10px;
-    }
+        .auth-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.5s ease;
+        }
 
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 5px;
-      margin-block-end: 10px;
-    }
+        .auth-card h2 {
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
 
-    .calendar-body {
-      flex-grow: 1;
-      overflow-y: auto;
-    }
+        .input-group {
+            margin-bottom: 1rem;
+        }
 
-    .calendar-row {
-      display: flex;
-      block-size: 120px;
-      margin-block-end: 5px;
-    }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
 
-    .date-cell {
-      inline-size: 120px;
-      background: #fff;
-      border: 1px solid #dee2e6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      font-weight: bold;
-    }
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            outline: none;
+            transition: all 0.3s ease;
+        }
 
-    .tasks-container {
-      display: flex;
-      flex-grow: 1;
-      margin-inline-start: 5px;
-    }
+        .input-group input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
 
-    .task-column {
-      flex: 1;
-      padding: 5px;
-      border: 1px solid #dee2e6;
-    }
+        .auth-btn {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: var(--primary);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    .task-morning {
-      background-color: var(--morning-color);
-    }
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+        }
 
-    .task-noon {
-      background-color: var(--noon-color);
-    }
+        .auth-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
 
-    .task-night {
-      background-color: var(--night-color);
-    }
+        /* Main Layout */
+        .main-container {
+            display: none;
+            min-height: 100vh;
+        }
 
-    .task-input {
-      inline-size: 100%;
-      block-size: 100%;
-      border: none;
-      background: transparent;
-      resize: none;
-      padding: 5px;
-    }
+        .navbar {
+            background: var(--secondary);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
 
-    .weekend {
-      background-color: var(--weekend-bg);
-    }
+        .logo {
+            color: var(--accent);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
 
-    .today {
-      border: 2px solid #0d6efd !important;
-    }
+        .logout-btn {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    .current-time-indicator {
-      position: absolute;
-      block-size: 2px;
-      background-color: var(--current-time-color);
-      pointer-events: none;
-    }
+        .logout-btn:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
 
-    .side-panel {
-      inline-size: 25%;
-      display: flex;
-      flex-direction: column;
-      background: #fff;
-      border-radius: 5px;
-      padding: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
+        .content {
+            display: flex;
+            padding: 1rem;
+            gap: 1rem;
+            height: calc(100vh - 4rem);
+        }
 
-    .mini-calendar {
-      margin-block-end: 20px;
-    }
+        /* Vertical Calendar */
+        .vertical-calendar {
+            flex: 3;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            position: relative; /* Add relative positioning */
+        }
 
-    .mini-calendar table {
-      inline-size: 100%;
-      border-collapse: collapse;
-    }
+        .week-navigation {
+            display: flex;
+            justify-content: flex-start; /* Align to the left */
+            align-items: center;
+            margin-bottom: 1rem;
+        }
 
-    .mini-calendar th,
-    .mini-calendar td {
-      text-align: center;
-      padding: 5px;
-      border: 1px solid #dee2e6;
-    }
+        .week-navigation button {
+            width: 40px; /* Set width to a fixed value */
+            height: 40px; /* Set height to the same fixed value to make it a square */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            background: var(--secondary);
+            color: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px; /* Add margin between buttons */
+        }
 
-    .projects-section {
-      flex-grow: 1;
-      overflow-y: auto;
-    }
+        .week-navigation button:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
 
-    .project-card {
-      background: #fff;
-      border: 1px solid #dee2e6;
-      border-radius: 5px;
-      padding: 10px;
-      margin-block-end: 10px;
-    }
+        .day-row {
+            display: grid;
+            grid-template-columns: 100px repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+            min-height: calc((100% - 3rem) / 7);
+        }
 
-    .project-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 5px;
-    }
+        .time-labels {
+            display: grid;
+            
+            align-items: center;
+            
+            grid-template-columns: 100px repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.5rem;
+            
+        }
 
-    .btn-nav {
-      padding: 5px 15px;
-      border: none;
-      border-radius: 5px;
-      background: #0d6efd;
-      color: white;
-      cursor: pointer;
-    }
+        .time-labels div:nth-child(2) { color: var(--morning); }
+        .time-labels div:nth-child(3) { color: var(--noon); }
+        .time-labels div:nth-child(4) { color: var(--night); }
 
-    .btn-nav:hover {
-      background: #0b5ed7;
-    }
+        .date-box {
+            background: var(--secondary);
+            border-radius: 10px;
+            padding: 0.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      inset-block-start: 0;
-      inset-inline-start: 0;
-      inline-size: 100%;
-      block-size: 100%;
-      background: rgba(0,0,0,0.5);
-    }
+        .date-box .weekday {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .date-box .weekday:nth-child(6), .date-box .weekday:nth-child(7) {
+            color: #ffc400;
+        }
 
-    .modal-content {
-      background: #fff;
-      inline-size: 400px;
-      margin: 100px auto;
-      padding: 20px;
-      border-radius: 5px;
-    }
+        .date-box .day-month {
+            font-size: 1rem;
+        }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-      inline-size: 8px;
-    }
+        .date-box .year {
+            font-size: 1rem;
+            opacity: 0.4;
+        }
 
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
+        .time-box {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 1rem;
+            position: relative;
+            min-height: 100px;
+        }
 
-    ::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 4px;
-    }
+        .time-box.morning { background: var(--morning); }
+        .time-box.noon { background: var(--noon); }
+        .time-box.night { background: var(--night); }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-  </style>
+        /* Monthly Calendar & Projects */
+        .side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .monthly-calendar {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .month-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between; /* Distribute items evenly */
+            gap: 0.5rem;
+        }
+
+        .calendar-grid > div {
+            flex: 1 1 calc(100% / 7 - 0.5rem); /* Ensure each item takes up equal space */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--secondary);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3; /* Make the days dimmer */
+        }
+
+        .projects-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--secondary);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Context Menu */
+        .context-menu {
+            display: none;
+            position: fixed;
+            background: var(--secondary);
+            border-radius: 8px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .context-menu-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .context-menu-item:hover {
+            background: var (--accent);
+            color: var (--primary);
+            border-radius: 4px;
+        }
+
+        /* Additional Styles */
+        .current-day {
+            border: 2px solid var(--accent);
+        }
+
+        .weekend {
+            background: var(--weekend);
+            
+        }
+
+        .weekend .weekday {
+            color: var(--weekend-text);
+        }
+
+        .task-item, .event-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem;
+            margin-bottom: 0.3rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .time-box:hover .add-btn {
+            opacity: 1;
+        }
+
+        .project-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .weekday:nth-child(6), .weekday:nth-child(7) {
+            color: var(--weekend-text); /* Blue neon color for weekends */
+        }
+
+        .month-navigation button {
+            width: 40px; /* Set width to a fixed value */
+            height: 40px; /* Set height to the same fixed value to make it a square */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            background: var(--secondary);
+            color: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .month-navigation button:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+    </style>
 </head>
 <body>
-<!-- Login/Signup Form -->
-<div class="login-container" id="loginForm">
-  <h2 class="text-center mb-4">Login</h2>
-  <form id="authForm">
-    <div class="mb-3">
-      <input type="text" class="form-control" id="username" placeholder="Username" required>
-    </div>
-    <div class="mb-3">
-      <input type="password" class="form-control" id="password" placeholder="Password" required>
-    </div>
-    <button type="submit" class="btn btn-primary w-100" id="loginBtn">Login</button>
-    <p class="text-center mt-3">
-      <a href="#" id="toggleAuth">Switch to Signup</a>
-    </p>
-  </form>
-</div>
-
-<!-- Main Calendar Container -->
-<div class="main-container" id="mainContainer">
-  <div class="calendar-container">
-    <!-- Vertical Calendar Section -->
-    <div class="vertical-calendar">
-      <div class="calendar-header">
-        <button class="btn-nav" id="prevWeek">←</button>
-        <h2 id="currentWeek">Current Week</h2>
-        <button class="btn-nav" id="nextWeek">→</button>
-      </div>
-      <div class="calendar-body" id="calendarBody">
-        <!-- Calendar rows will be dynamically inserted here -->
-      </div>
-    </div>
-
-    <!-- Side Panel -->
-    <div class="side-panel">
-      <div class="mini-calendar" id="miniCalendar">
-        <!-- Mini calendar will be dynamically inserted here -->
-      </div>
-      <div class="projects-section">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h3>Projects</h3>
-          <button class="btn btn-primary btn-sm" id="addProjectBtn">Add Project</button>
+    <!-- Login Page -->
+    <div class="auth-container" id="loginPage">
+        <div class="auth-card">
+            <h2>Welcome to EasyDay</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="input-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+                <div id="loginError" class="error-message"></div>
+                <a href="#" class="auth-link" id="toRegister">Create Account</a>
+            </form>
         </div>
-        <div id="projectsList">
-          <!-- Projects will be dynamically inserted here -->
-        </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- Project Modal -->
-<div class="modal" id="projectModal">
-  <div class="modal-content">
-    <h3 id="modalTitle">Add Project</h3>
-    <form id="projectForm">
-      <div class="mb-3">
-        <input type="text" class="form-control" id="projectName" placeholder="Project Name" required>
-      </div>
-      <div class="mb-3">
-        <input type="date" class="form-control" id="projectDeadline" required>
-      </div>
-      <div class="mb-3">
-        <textarea class="form-control" id="projectContent" placeholder="Project Description" rows="3"></textarea>
-      </div>
-      <div class="d-flex justify-content-end gap-2">
-        <button type="button" class="btn btn-secondary" id="closeModal">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save</button>
-      </div>
-    </form>
-  </div>
-</div>
-<script>
-  // Calendar App JavaScript
-  class CalendarApp {
-    constructor() {
-      this.currentDate = new Date();
-      this.tasks = {};
-      this.projects = [];
-      this.isAuthenticated = false;
-      this.initializeEventListeners();
-      this.setupAuthenticationHandlers();
-    }
+    <!-- Register Page -->
+    <div class="auth-container" id="registerPage" style="display: none;">
+        <div class="auth-card">
+            <h2>Create Account</h2>
+            <form id="registerForm">
+                <div class="input-group">
+                    <label for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="input-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="auth-btn">Register</button>
+                <div id="registerError" class="error-message"></div>
+                <a href="#" class="auth-link" id="toLogin">Back to Login</a>
+            </form>
+        </div>
+    </div>
 
-    initializeEventListeners() {
-      // Navigation buttons
-      document.getElementById('prevWeek').addEventListener('click', () => this.navigateWeek(-1));
-      document.getElementById('nextWeek').addEventListener('click', () => this.navigateWeek(1));
-
-      // Project modal handlers
-      document.getElementById('addProjectBtn').addEventListener('click', () => this.showProjectModal());
-      document.getElementById('closeModal').addEventListener('click', () => this.hideProjectModal());
-      document.getElementById('projectForm').addEventListener('submit', (e) => this.handleProjectSubmit(e));
-
-      // Calendar interaction
-      document.getElementById('calendarBody').addEventListener('input', (e) => {
-        if (e.target.classList.contains('task-input')) {
-          this.saveTask(e.target);
-        }
-      });
-
-      // Auto-update current time indicator
-      setInterval(() => this.updateCurrentTimeIndicator(), 60000);
-    }
-
-    setupAuthenticationHandlers() {
-      document.getElementById('authForm').addEventListener('submit', (e) => this.handleAuth(e));
-      document.getElementById('toggleAuth').addEventListener('click', (e) => this.toggleAuthMode(e));
-    }
-
-    handleAuth(e) {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      // Simulate authentication (replace with actual authentication logic)
-      if (username && password) {
-        this.isAuthenticated = true;
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        this.initializeCalendar();
-      }
-    }
-
-    toggleAuthMode(e) {
-      e.preventDefault();
-      const isLogin = document.getElementById('loginBtn').textContent === 'Login';
-      document.getElementById('loginBtn').textContent = isLogin ? 'Sign Up' : 'Login';
-      document.querySelector('h2').textContent = isLogin ? 'Sign Up' : 'Login';
-      document.getElementById('toggleAuth').textContent = isLogin ? 'Switch to Login' : 'Switch to Signup';
-    }
-
-    initializeCalendar() {
-      this.renderCalendar();
-      this.renderMiniCalendar();
-      this.loadSavedData();
-      this.updateCurrentTimeIndicator();
-    }
-
-    renderCalendar() {
-      const calendarBody = document.getElementById('calendarBody');
-      calendarBody.innerHTML = '';
-
-      const startOfWeek = this.getStartOfWeek(this.currentDate);
-      document.getElementById('currentWeek').textContent =
-              `${this.formatDate(startOfWeek)} - ${this.formatDate(this.addDays(startOfWeek, 6))}`;
-
-      for (let i = 0; i < 7; i++) {
-        const currentDate = this.addDays(startOfWeek, i);
-        const row = this.createCalendarRow(currentDate);
-        calendarBody.appendChild(row);
-      }
-    }
-
-    createCalendarRow(date) {
-      const row = document.createElement('div');
-      row.className = 'calendar-row';
-
-      const dateCell = document.createElement('div');
-      dateCell.className = 'date-cell';
-      if (this.isWeekend(date)) dateCell.classList.add('weekend');
-      if (this.isToday(date)) dateCell.classList.add('today');
-
-      dateCell.innerHTML = `
-                    <div>${this.getDayName(date)}</div>
-                    <div>${date.getDate()}</div>
-                `;
-
-      const tasksContainer = document.createElement('div');
-      tasksContainer.className = 'tasks-container';
-
-      const periods = ['morning', 'noon', 'night'];
-      periods.forEach(period => {
-        const taskColumn = document.createElement('div');
-        taskColumn.className = `task-column task-${period}`;
-
-        const textarea = document.createElement('textarea');
-        textarea.className = 'task-input';
-        textarea.setAttribute('data-date', this.formatDate(date));
-        textarea.setAttribute('data-period', period);
-        textarea.value = this.getTaskValue(date, period);
-
-        taskColumn.appendChild(textarea);
-        tasksContainer.appendChild(taskColumn);
-      });
-
-      row.appendChild(dateCell);
-      row.appendChild(tasksContainer);
-      return row;
-    }
-
-    renderMiniCalendar() {
-      const miniCalendar = document.getElementById('miniCalendar');
-      let html = '<table><thead><tr>';
-
-      // Add headers for days of the week
-      const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      daysOfWeek.forEach(day => {
-        html += `<th>${day}</th>`;
-      });
-      html += '</tr></thead><tbody>';
-
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      let date = 1;
-
-      for (let i = 0; i < 6; i++) {
-        html += '<tr>';
-        for (let j = 0; j < 7; j++) {
-          if (i === 0 && j < firstDay.getDay()) {
-            html += '<td></td>';
-          } else if (date > lastDay.getDate()) {
-            break;
-          } else {
-            const dateStr = `${now.getFullYear()}-${now.getMonth() + 1}-${date}`;
-            html += `<td data-date="${dateStr}">${date}</td>`;
-            date++;
-          }
-        }
-        html += '</tr>';
-        if (date > lastDay.getDate()) break;
-      }
-
-      html += '</tbody></table>';
-      miniCalendar.innerHTML = html;
-
-      highlightCurrentWeek();
-    }
-
-    showProjectModal() {
-      document.getElementById('projectModal').style.display = 'block';
-    }
-
-    hideProjectModal() {
-      document.getElementById('projectModal').style.display = 'none';
-    }
-
-    handleProjectSubmit(e) {
-      e.preventDefault();
-      const projectData = {
-        id: Date.now(),
-        name: document.getElementById('projectName').value,
-        deadline: document.getElementById('projectDeadline').value,
-        description: document.getElementById('projectContent').value
-      };
-
-      this.projects.push(projectData);
-      this.renderProjects();
-      this.hideProjectModal();
-      e.target.reset();
-    }
-
-    renderProjects() {
-      const projectsList = document.getElementById('projectsList');
-      projectsList.innerHTML = this.projects.map(project => `
-                    <div class="project-card">
-                        <h4>${project.name}</h4>
-                        <p>Deadline: ${project.deadline}</p>
-                        <p>${project.description}</p>
-                        <div class="project-actions">
-                            <button class="btn btn-sm btn-outline-primary" onclick="calendar.editProject(${project.id})">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="calendar.deleteProject(${project.id})">Delete</button>
-                        </div>
+    <!-- Main Application -->
+    <div class="main-container" id="mainPage">
+        <nav class="navbar">
+            <div class="logo">EasyDay</div>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </nav>
+        <div class="content">
+            <div class="vertical-calendar">
+                <div class="time-labels">
+                    <div class="week-navigation">
+                        <button id="prevWeek"><i class="fas fa-chevron-up"></i></button>
+                        <button id="nextWeek"><i class="fas fa-chevron-down"></i></button>
                     </div>
-                `).join('');
+                    <div>Morning</div>
+                    <div>Noon</div>
+                    <div>Night</div>
+                </div>
+                <div id="weeklyCalendar"></div>
+            </div>
+            <div class="side-panel">
+                <div class="monthly-calendar">
+                    <div class="month-navigation">
+                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <h3 id="currentMonth">September 2023</h3>
+                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-grid" id="monthlyCalendar"></div>
+                </div>
+                <div class="projects-section">
+                    <div class="projects-header">
+                        <h3>Projects</h3>
+                        <button id="addProject" class="auth-btn">Add Project</button>
+                        <button id="trashBtn" class="auth-btn">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div id="projectsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <h3>Add Item</h3>
+            <form id="taskForm">
+                <div class="input-group">
+                    <label for="itemName">Name</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                <div class="input-group">
+                    <label>Type</label>
+                    <select id="itemType">
+                        <option value="task">Task</option>
+                        <option value="event">Event</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Repeat</label>
+                    <select id="itemRepeat">
+                        <option value="none">No repeat</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+                </div>
+                <button type="submit" class="auth-btn">Add</button>
+                <button type="button" class="auth-btn" onclick="closeModal('taskModal')">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="projectModal">
+        <div class="modal-content">
+            <h3>Add Project</h3>
+            <form id="projectForm">
+                <div class="input-group">
+                    <label for="projectName">Name</label>
+                    <input type="text" id="projectName" required>
+                </div>
+                <div class="input-group">
+                    <label for="projectDeadline">Deadline</label>
+                    <input type="date" id="projectDeadline" required>
+                </div>
+                <div class="input-group">
+                    <label for="projectContent">Content</label>
+                    <textarea id="projectContent" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="auth-btn">Add</button>
+                <button type="button" class="auth-btn" onclick="closeModal('projectModal')">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" data-action="open">Open</div>
+        <div class="context-menu-item" data-action="delete">Delete</div>
+    </div>
+
+    <script>
+// Constants and State Management
+const state = {
+    currentUser: null,
+    currentWeek: new Date(),
+    currentMonth: new Date(),
+    selectedDate: new Date(),
+    tasks: {},
+    projects: [],
+    draggedItem: null
+};
+
+// DOM Elements
+const elements = {
+    loginPage: document.getElementById('loginPage'),
+    registerPage: document.getElementById('registerPage'),
+    mainPage: document.getElementById('mainPage'),
+    loginForm: document.getElementById('loginForm'),
+    registerForm: document.getElementById('registerForm'),
+    weeklyCalendar: document.getElementById('weeklyCalendar'),
+    monthlyCalendar: document.getElementById('monthlyCalendar'),
+    projectsList: document.getElementById('projectsList'),
+    contextMenu: document.getElementById('contextMenu'),
+    taskModal: document.getElementById('taskModal'),
+    projectModal: document.getElementById('projectModal')
+};
+
+// Utility Functions
+function formatDate(date) {
+    const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+    const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(date);
+    const weekday = parts.find(part => part.type === 'weekday').value.toUpperCase();
+    const day = parts.find(part => part.type === 'day').value;
+    const month = parts.find(part => part.type === 'month').value;
+    const year = parts.find(part => part.type === 'year').value;
+    return { weekday, day, month, year };
+}
+
+function getWeekDates(date) {
+    const week = [];
+    const current = new Date(date);
+    current.setDate(current.getDate() - ((current.getDay() + 6) % 7)); // Adjust to start from Monday
+    
+    for (let i = 0; i < 7; i++) {
+        week.push(new Date(current));
+        current.setDate(current.getDate() + 1);
     }
+    return week;
+}
 
-    // Utility functions
-    getStartOfWeek(date) {
-      const result = new Date(date);
-      result.setDate(result.getDate() - result.getDay());
-      return result;
+function getMonthDates(date) {
+    const month = [];
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    
+    firstDay.setDate(firstDay.getDate() - ((firstDay.getDay() + 6) % 7)); // Adjust to start from Monday
+    
+    while (firstDay <= lastDay || month.length % 7 !== 0) {
+        month.push(new Date(firstDay));
+        firstDay.setDate(firstDay.getDate() + 1);
     }
+    return month;
+}
 
-    addDays(date, days) {
-      const result = new Date(date);
-      result.setDate(result.getDate() + days);
-      return result;
-    }
+// Render Functions
+function renderWeeklyCalendar() {
+    const weekDates = getWeekDates(state.currentWeek);
+    let html = '';
 
-    formatDate(date) {
-      return date.toISOString().split('T')[0];
-    }
-
-    isWeekend(date) {
-      return date.getDay() === 0 || date.getDay() === 6;
-    }
-
-    isToday(date) {
-      const today = new Date();
-      return date.getDate() === today.getDate() &&
-              date.getMonth() === today.getMonth() &&
-              date.getFullYear() === today.getFullYear();
-    }
-
-    getDayName(date) {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
-    }
-
-    getMonthName(month) {
-      return new Date(2000, month, 1).toLocaleDateString('en-US', { month: 'long' });
-    }
-
-    saveTask(textarea) {
-      const date = textarea.getAttribute('data-date');
-      const period = textarea.getAttribute('data-period');
-      if (!this.tasks[date]) this.tasks[date] = {};
-      this.tasks[date][period] = textarea.value;
-
-      // Save to localStorage
-      localStorage.setItem('calendarTasks', JSON.stringify(this.tasks));
-    }
-
-    getTaskValue(date, period) {
-      const dateStr = this.formatDate(date);
-      return this.tasks[dateStr]?.[period] || '';
-    }
-
-    loadSavedData() {
-      // Load tasks
-      const savedTasks = localStorage.getItem('calendarTasks');
-      if (savedTasks) {
-        this.tasks = JSON.parse(savedTasks);
-      }
-
-      // Load projects
-      const savedProjects = localStorage.getItem('calendarProjects');
-      if (savedProjects) {
-        this.projects = JSON.parse(savedProjects);
-        this.renderProjects();
-      }
-    }
-
-    navigateWeek(direction) {
-      this.currentDate.setDate(this.currentDate.getDate() + (direction * 7));
-      this.renderCalendar();
-      this.renderMiniCalendar();
-    }
-
-    editProject(projectId) {
-      const project = this.projects.find(p => p.id === projectId);
-      if (project) {
-        document.getElementById('projectName').value = project.name;
-        document.getElementById('projectDeadline').value = project.deadline;
-        document.getElementById('projectContent').value = project.description;
-        document.getElementById('modalTitle').textContent = 'Edit Project';
-        this.showProjectModal();
-      }
-    }
-
-    deleteProject(projectId) {
-      if (confirm('Are you sure you want to delete this project?')) {
-        this.projects = this.projects.filter(p => p.id !== projectId);
-        this.renderProjects();
-        localStorage.setItem('calendarProjects', JSON.stringify(this.projects));
-      }
-    }
-  }
-
-  function highlightCurrentWeek() {
-    const now = new Date();
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-    const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
-
-    const rows = document.querySelectorAll('#miniCalendar tbody tr');
-    rows.forEach(row => {
-      const cells = row.querySelectorAll('td');
-      let weekStart, weekEnd;
-
-      cells.forEach(cell => {
-        const date = new Date(cell.dataset.date);
-        if (!weekStart || date < weekStart) weekStart = date;
-        if (!weekEnd || date > weekEnd) weekEnd = date;
-      });
-
-      if (weekStart <= endOfWeek && weekEnd >= startOfWeek) {
-        row.classList.add('highlight-week');
-      } else {
-        row.classList.remove('highlight-week');
-      }
+    weekDates.forEach(date => {
+        const dateStr = date.toISOString().split('T')[0];
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const { weekday, day, month, year } = formatDate(date);
+        
+        html += `
+            <div class="day-row ${isWeekend ? 'weekend' : ''}">
+                <div class="date-box ${date.toDateString() === new Date().toDateString() ? 'current-day' : ''}">
+                    <div class="weekday">${weekday}</div>
+                    <div class="day-month">${month} ${day}</div>
+                    <div class="year">${year}</div>
+                </div>
+                <div class="time-box morning" data-date="${dateStr}" data-time="morning">
+                    ${renderTasks(dateStr, 'morning')}
+                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'morning')">+</button>
+                </div>
+                <div class="time-box noon" data-date="${dateStr}" data-time="noon">
+                    ${renderTasks(dateStr, 'noon')}
+                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'noon')">+</button>
+                </div>
+                <div class="time-box night" data-date="${dateStr}" data-time="night">
+                    ${renderTasks(dateStr, 'night')}
+                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'night')">+</button>
+                </div>
+            </div>
+        `;
     });
-  }
 
-  // Initialize the calendar app
-  const calendar = new CalendarApp();
-</script>
+    elements.weeklyCalendar.innerHTML = html;
+    setupDragAndDrop();
+}
+
+function renderMonthlyCalendar() {
+    const monthDates = getMonthDates(state.currentMonth);
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    let html = '<div class="calendar-grid">';
+    
+    weekdays.forEach(day => {
+        html += `<div class="weekday">${day}</div>`;
+    });
+
+    monthDates.forEach(date => {
+        const isCurrentMonth = date.getMonth() === state.currentMonth.getMonth();
+        const isToday = date.toDateString() === new Date().toDateString();
+        
+        html += `
+            <div class="calendar-day ${isCurrentMonth ? '' : 'other-month'} ${isToday ? 'current-day' : ''}"
+                 onclick="selectDate(new Date('${date.toISOString()}'))">
+                ${date.getDate()}
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    elements.monthlyCalendar.innerHTML = html;
+    document.getElementById('currentMonth').textContent = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long'
+    }).format(state.currentMonth);
+}
+
+// Event Handlers
+function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    // Simulate authentication
+    if (username && password) {
+        state.currentUser = { username };
+        elements.loginPage.style.display = 'none';
+        elements.mainPage.style.display = 'block';
+        loadUserData();
+    }
+}
+
+function handleRegister(e) {
+    e.preventDefault();
+    const username = document.getElementById('registerUsername').value;
+    const password = document.getElementById('registerPassword').value;
+
+    // Simulate registration
+    if (username && password) {
+        showLoginPage();
+    }
+}
+
+function handleLogout() {
+    state.currentUser = null;
+    elements.mainPage.style.display = 'none';
+    elements.loginPage.style.display = 'flex';
+}
+
+function openTaskModal(date, time) {
+    state.selectedDate = date;
+    state.selectedTime = time;
+    elements.taskModal.style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function handleTaskSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('itemName').value;
+    const type = document.getElementById('itemType').value;
+    const repeat = document.getElementById('itemRepeat').value;
+
+    const task = {
+        id: Date.now(),
+        name,
+        type,
+        repeat,
+        date: state.selectedDate,
+        time: state.selectedTime
+    };
+
+    const addTask = (task) => {
+        if (!state.tasks[task.date]) {
+            state.tasks[task.date] = {};
+        }
+        if (!state.tasks[task.date][task.time]) {
+            state.tasks[task.date][task.time] = [];
+        }
+        state.tasks[task.date][task.time].push(task);
+    };
+
+    addTask(task);
+
+    if (repeat !== 'none') {
+        let currentDate = new Date(state.selectedDate);
+        for (let i = 0; i < 30; i++) { // Repeat for the next 30 days/weeks
+            if (repeat === 'daily') {
+                currentDate.setDate(currentDate.getDate() + 1);
+            } else if (repeat === 'weekly') {
+                currentDate.setDate(currentDate.getDate() + 7);
+            }
+            const newTask = { ...task, id: Date.now(), date: currentDate.toISOString().split('T')[0] };
+            addTask(newTask);
+        }
+    }
+
+    saveUserData();
+    renderWeeklyCalendar();
+    closeModal('taskModal');
+}
+
+function handleProjectSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('projectName').value;
+    const deadline = document.getElementById('projectDeadline').value;
+    const content = document.getElementById('projectContent').value;
+
+    fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, deadline, content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            state.projects.push({ id: data.id, name, deadline, content });
+            renderProjects();
+            closeModal('projectModal');
+        } else {
+            console.error('Failed to create project');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Drag and Drop Implementation
+function setupDragAndDrop() {
+    const draggables = document.querySelectorAll('.task-item, .event-item');
+    const dropZones = document.querySelectorAll('.time-box');
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', handleDragStart);
+        draggable.addEventListener('dragend', handleDragEnd);
+    });
+
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('drop', handleDrop);
+    });
+}
+
+function handleDragStart(e) {
+    state.draggedItem = e.target;
+    e.target.classList.add('dragging');
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const dropZone = e.currentTarget;
+    dropZone.classList.remove('drag-over');
+
+    if (state.draggedItem) {
+        const oldDate = state.draggedItem.dataset.date;
+        const oldTime = state.draggedItem.dataset.time;
+        const newDate = dropZone.dataset.date;
+        const newTime = dropZone.dataset.time;
+
+        // Update task data
+        const taskId = parseInt(state.draggedItem.dataset.taskId);
+        moveTask(taskId, oldDate, oldTime, newDate, newTime);
+        renderWeeklyCalendar();
+    }
+}
+
+// Data Management
+function saveUserData() {
+    if (state.currentUser) {
+        localStorage.setItem(`tasks_${state.currentUser.username}`, JSON.stringify(state.tasks));
+        localStorage.setItem(`projects_${state.currentUser.username}`, JSON.stringify(state.projects));
+    }
+}
+
+function loadUserData() {
+    if (state.currentUser) {
+        const tasks = localStorage.getItem(`tasks_${state.currentUser.username}`);
+        const projects = localStorage.getItem(`projects_${state.currentUser.username}`);
+        
+        if (tasks) state.tasks = JSON.parse(tasks);
+        if (projects) state.projects = JSON.parse(projects);
+        
+        renderWeeklyCalendar();
+        renderMonthlyCalendar();
+        renderProjects();
+    }
+}
+
+// Initialize Application
+function initApp() {
+    // Event Listeners
+    elements.loginForm.addEventListener('submit', handleLogin);
+    elements.registerForm.addEventListener('submit', handleRegister);
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
+    document.getElementById('prevWeek').addEventListener('click', () => {
+        state.currentWeek.setDate(state.currentWeek.getDate() - 7);
+        renderWeeklyCalendar();
+    });
+    document.getElementById('nextWeek').addEventListener('click', () => {
+        state.currentWeek.setDate(state.currentWeek.getDate() + 7);
+        renderWeeklyCalendar();
+    });
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
+        renderMonthlyCalendar();
+    });
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
+        renderMonthlyCalendar();
+    });
+    document.getElementById('addProject').addEventListener('click', () => {
+        elements.projectModal.style.display = 'flex';
+    });
+    document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
+
+    // Initialize views
+    renderWeeklyCalendar();
+    renderMonthlyCalendar();
+    
+    // Handle authentication state
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        state.currentUser = JSON.parse(savedUser);
+        elements.loginPage.style.display = 'none';
+        elements.mainPage.style.display = 'block';
+        loadUserData();
+    }
+}
+
+// Start the application
+document.addEventListener('DOMContentLoaded', initApp);
+
+// Context Menu
+document.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.task-item') || e.target.closest('.event-item')) {
+        e.preventDefault();
+        const contextMenu = elements.contextMenu;
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${e.pageX}px`;
+        contextMenu.style.top = `${e.pageY}px`;
+        state.contextTarget = e.target.closest('.task-item, .event-item');
+    }
+});
+
+document.addEventListener('click', () => {
+    elements.contextMenu.style.display = 'none';
+});
+
+elements.contextMenu.addEventListener('click', (e) => {
+    const action = e.target.dataset.action;
+    if (action === 'delete' && state.contextTarget) {
+        deleteTask(state.contextTarget.dataset.taskId);
+        renderWeeklyCalendar();
+    }
+    elements.contextMenu.style.display = 'none';
+});
+
+// Additional utility functions
+function moveTask(taskId, oldDate, oldTime, newDate, newTime) {
+    const task = state.tasks[oldDate][oldTime].find(t => t.id === taskId);
+    if (task) {
+        // Remove from old position
+        state.tasks[oldDate][oldTime] = state.tasks[oldDate][oldTime].filter(t => t.id !== taskId);
+        
+        // Add to new position
+        if (!state.tasks[newDate]) state.tasks[newDate] = {};
+        if (!state.tasks[newDate][newTime]) state.tasks[newDate][newTime] = [];
+        state.tasks[newDate][newTime].push({...task, date: newDate, time: newTime});
+        
+        saveUserData();
+    }
+}
+
+function deleteTask(taskId) {
+    Object.keys(state.tasks).forEach(date => {
+        Object.keys(state.tasks[date]).forEach(time => {
+            state.tasks[date][time] = state.tasks[date][time].filter(task => task.id !== parseInt(taskId));
+        });
+    });
+    saveUserData();
+}
+
+function renderTasks(date, time) {
+    if (!state.tasks[date] || !state.tasks[date][time]) return '';
+    
+    return state.tasks[date][time].map(task => `
+        <div class="${task.type}-item" 
+             draggable="true"
+             data-task-id="${task.id}"
+             data-date="${date}"
+             data-time="${time}">
+            <i class="fas fa-${task.type === 'task' ? 'tasks' : 'calendar'}"></i>
+            <span>${task.name}</span>
+            ${task.repeat !== 'none' ? `<i class="fas fa-sync-alt"></i>` : ''}
+        </div>
+    `).join('');
+}
+    </script>
 </body>
 </html>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
