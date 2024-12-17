@@ -401,6 +401,19 @@
             background: rgba(255, 255, 255, 0.1);
             cursor: pointer;
             transition: all 0.3s ease;
+            justify-content: space-between; /* Add this line to space out the checkbox */
+        }
+
+        .task-item input[type="checkbox"], .event-item input[type="checkbox"] {
+            margin-left: auto; /* Align checkbox to the right */
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent);
+        }
+
+        .task-item.completed, .event-item.completed {
+            text-decoration: line-through;
+            opacity: 0.5;
         }
 
         .add-btn {
@@ -470,6 +483,12 @@
         .month-navigation button:hover {
             background: var(--accent);
             color: var(--primary);
+        }
+
+        .locked {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -622,7 +641,8 @@ const state = {
     selectedDate: new Date(),
     tasks: {},
     projects: [],
-    draggedItem: null
+    draggedItem: null,
+    contextTarget: null
 };
 
 // DOM Elements
@@ -637,7 +657,10 @@ const elements = {
     projectsList: document.getElementById('projectsList'),
     contextMenu: document.getElementById('contextMenu'),
     taskModal: document.getElementById('taskModal'),
-    projectModal: document.getElementById('projectModal')
+    projectModal: document.getElementById('projectModal'),
+    taskForm: document.getElementById('taskForm'),
+    projectForm: document.getElementById('projectForm'),
+    itemRepeat: document.getElementById('itemRepeat')
 };
 
 // Utility Functions
@@ -775,9 +798,24 @@ function handleLogout() {
     elements.loginPage.style.display = 'flex';
 }
 
-function openTaskModal(date, time) {
+function openTaskModal(date, time, task = null) {
     state.selectedDate = date;
     state.selectedTime = time;
+    if (task) {
+        document.getElementById('itemName').value = task.name;
+        document.getElementById('itemType').value = task.type;
+        document.getElementById('itemRepeat').value = task.repeat;
+        elements.taskForm.dataset.taskId = task.id;
+        elements.itemRepeat.disabled = true;
+        elements.itemRepeat.classList.add('locked');
+        elements.itemRepeat.title = "Repetition cannot be edited";
+    } else {
+        elements.taskForm.reset();
+        delete elements.taskForm.dataset.taskId;
+        elements.itemRepeat.disabled = false;
+        elements.itemRepeat.classList.remove('locked');
+        elements.itemRepeat.title = "";
+    }
     elements.taskModal.style.display = 'flex';
 }
 
@@ -790,9 +828,10 @@ function handleTaskSubmit(e) {
     const name = document.getElementById('itemName').value;
     const type = document.getElementById('itemType').value;
     const repeat = document.getElementById('itemRepeat').value;
+    const taskId = elements.taskForm.dataset.taskId;
 
     const task = {
-        id: Date.now(),
+        id: taskId ? parseInt(taskId) : Date.now(),
         name,
         type,
         repeat,
@@ -810,18 +849,25 @@ function handleTaskSubmit(e) {
         state.tasks[task.date][task.time].push(task);
     };
 
-    addTask(task);
+    if (taskId) {
+        // Update existing task
+        const oldTask = state.tasks[state.selectedDate][state.selectedTime].find(t => t.id === task.id);
+        Object.assign(oldTask, task);
+    } else {
+        // Add new task
+        addTask(task);
 
-    if (repeat !== 'none') {
-        let currentDate = new Date(state.selectedDate);
-        for (let i = 0; i < 30; i++) { // Repeat for the next 30 days/weeks
-            if (repeat === 'daily') {
-                currentDate.setDate(currentDate.getDate() + 1);
-            } else if (repeat === 'weekly') {
-                currentDate.setDate(currentDate.getDate() + 7);
+        if (repeat !== 'none') {
+            let currentDate = new Date(state.selectedDate);
+            for (let i = 0; i < 30; i++) { // Repeat for the next 30 days/weeks
+                if (repeat === 'daily') {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                } else if (repeat === 'weekly') {
+                    currentDate.setDate(currentDate.getDate() + 7);
+                }
+                const newTask = { ...task, id: Date.now(), date: currentDate.toISOString().split('T')[0] };
+                addTask(newTask);
             }
-            const newTask = { ...task, id: Date.now(), date: currentDate.toISOString().split('T')[0] };
-            addTask(newTask);
         }
     }
 
@@ -989,7 +1035,13 @@ document.addEventListener('click', () => {
 
 elements.contextMenu.addEventListener('click', (e) => {
     const action = e.target.dataset.action;
-    if (action === 'delete' && state.contextTarget) {
+    if (action === 'open' && state.contextTarget) {
+        const taskId = parseInt(state.contextTarget.dataset.taskId);
+        const date = state.contextTarget.dataset.date;
+        const time = state.contextTarget.dataset.time;
+        const task = state.tasks[date][time].find(t => t.id === taskId);
+        openTaskModal(date, time, task);
+    } else if (action === 'delete' && state.contextTarget) {
         deleteTask(state.contextTarget.dataset.taskId);
         renderWeeklyCalendar();
     }
@@ -1025,7 +1077,7 @@ function renderTasks(date, time) {
     if (!state.tasks[date] || !state.tasks[date][time]) return '';
     
     return state.tasks[date][time].map(task => `
-        <div class="${task.type}-item" 
+        <div class="${task.type}-item ${task.completed ? 'completed' : ''}" 
              draggable="true"
              data-task-id="${task.id}"
              data-date="${date}"
@@ -1033,8 +1085,19 @@ function renderTasks(date, time) {
             <i class="fas fa-${task.type === 'task' ? 'tasks' : 'calendar'}"></i>
             <span>${task.name}</span>
             ${task.repeat !== 'none' ? `<i class="fas fa-sync-alt"></i>` : ''}
+            ${task.type === 'task' ? `<input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTaskCompletion(${task.id}, '${date}', '${time}')">`
+            :'<input type="checkbox" style="visibility: hidden;">'}
         </div>
     `).join('');
+}
+
+function toggleTaskCompletion(taskId, date, time) {
+    const task = state.tasks[date][time].find(t => t.id === taskId);
+    if (task) {
+        task.completed = !task.completed;
+        saveUserData();
+        renderWeeklyCalendar();
+    }
 }
     </script>
 </body>
