@@ -113,7 +113,7 @@ app.post('/api/signup', async (req, res) => {
             }
             return;
           }
-          res.json({ id: this.lastID });
+          res.json({ success: true, message: 'Create account successfully' });
         });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -126,14 +126,14 @@ app.post('/api/login', (req, res) => {
     if (err) {
       res.status(500).json({ error: 'Server error' });
     } else if (!user) {
-      res.status(400).json({ error: 'Invalid username or password' });
+      res.status(400).json({ error: 'Wrong username or password' }); // Update error message
     } else {
       const match = await bcrypt.compare(password, user.password);
       if (match) {
         req.session.userId = user.id;
-        res.json({ success: true });
+        res.json({ success: true, redirect: '/index.html' }); // Add redirect URL
       } else {
-        res.status(400).json({ error: 'Invalid username or password' });
+        res.status(400).json({ error: 'Wrong username or password' }); // Update error message
       }
     }
   });

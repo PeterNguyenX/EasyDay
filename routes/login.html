@@ -249,7 +249,7 @@
         }
 
         .time-box {
-            background: var(--card-bg);
+            background: var (--card-bg);
             border-radius: 10px;
             padding: 1rem;
             position: relative;
@@ -667,7 +667,6 @@
     <!-- Modals -->
     <div class="modal" id="taskModal">
         <div class="modal-content">
-            <h3>Add Item</h3>
             <form id="taskForm">
                 <div class="input-group">
                     <label for="itemName">Name</label>
@@ -855,30 +854,67 @@ function renderMonthlyCalendar() {
 }
 
 // Event Handlers
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
 
-    // Simulate authentication
-    if (username && password) {
-        state.currentUser = { username };
-        elements.loginPage.style.display = 'none';
-        elements.mainPage.style.display = 'block';
-        loadUserData();
+    const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+        window.location.href = result.redirect; // Redirect to main page
+    } else {
+        document.getElementById('loginError').textContent = result.error; // Display error message
     }
 }
 
-function handleRegister(e) {
+document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+async function handleRegister(e) {
     e.preventDefault();
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
 
-    // Simulate registration
-    if (username && password) {
-        showLoginPage();
+    const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+        document.getElementById('registerError').textContent = result.message;
+        document.getElementById('registerError').innerHTML += '<br><a href="#" class="auth-link" id="toLogin">Back to Login</a>';
+        document.getElementById('toLogin').addEventListener('click', showLoginPage);
+    } else {
+        document.getElementById('registerError').textContent = result.error;
     }
 }
+
+document.getElementById('registerForm').addEventListener('submit', handleRegister);
+
+function showRegisterPage() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('registerPage').style.display = 'flex';
+}
+
+document.getElementById('toRegister').addEventListener('click', showRegisterPage);
+
+function showLoginPage() {
+    document.getElementById('registerPage').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+}
+
+document.getElementById('toLogin').addEventListener('click', showLoginPage);
 
 function handleLogout() {
     state.currentUser = null;
