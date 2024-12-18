@@ -882,8 +882,7 @@
 
     function handleLogout() {
         state.currentUser = null;
-        elements.mainPage.style.display = 'none';
-        elements.loginPage.style.display = 'flex';
+        window.location.href = 'login.html'
     }
 
     function openTaskModal(date, time, task = null) {
