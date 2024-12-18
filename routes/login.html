@@ -187,7 +187,6 @@
             cursor: pointer;
             transition: all 0.3s ease;
             margin: 0 5px; /* Add margin between buttons */
-            opacity: 0.7; /* Make it not see-through */
         }
 
         .week-navigation button:hover {
@@ -205,19 +204,17 @@
 
         .time-labels {
             display: grid;
+            
             align-items: center;
+            
             grid-template-columns: 100px repeat(3, 1fr);
             gap: 1rem;
             margin-bottom: 1rem;
             text-align: center;
             font-weight: bold;
-            color: var();
+            color: var(--accent);
             font-size: 1.5rem;
-            position: sticky; /* Make it sticky */
-            top: 0; /* Stick to the top */
-            background: var(); /* Match the background */
-            z-index: 10; /* Ensure it stays above other content */
-            opacity: 1; /* Make it not see-through */
+            
         }
 
         .time-labels div:nth-child(2) { color: var(--morning); }
@@ -326,31 +323,6 @@
             backdrop-filter: blur(10px);
             flex-grow: 1;
             overflow-y: auto;
-            position: relative;
-        }
-
-        .add-project-btn {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--accent);
-            color: var(--primary);
-            border: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .add-project-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(100, 255, 218, 0.5);
         }
 
         /* Animations */
@@ -430,7 +402,6 @@
             cursor: pointer;
             transition: all 0.3s ease;
             justify-content: space-between; /* Add this line to space out the checkbox */
-            opacity: 0.99; /* Set normal opacity to 0.9 */
         }
 
         .task-item input[type="checkbox"], .event-item input[type="checkbox"] {
@@ -462,7 +433,7 @@
         }
 
         .time-box:hover .add-btn {
-            opacity: 0.8;
+            opacity: 1;
         }
 
         .project-item {
@@ -593,9 +564,12 @@
                 <div class="projects-section">
                     <div class="projects-header">
                         <h3>Projects</h3>
+                        <button id="addProject" class="auth-btn">Add Project</button>
+                        <button id="trashBtn" class="auth-btn">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                     <div id="projectsList"></div>
-                    <button id="addProject" class="add-project-btn">+</button>
                 </div>
             </div>
         </div>
