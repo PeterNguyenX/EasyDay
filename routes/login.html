@@ -325,6 +325,30 @@
             overflow-y: auto;
         }
 
+        .add-project-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px; /* Make it a square with rounded corners */
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .add-project-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(100, 255, 218, 0.5);
+        }
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
@@ -491,6 +515,19 @@
             color: var(--text);
             cursor: not-allowed;
         }
+
+        .project-modal-container {
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+            flex-grow: 1;
+            overflow-y: auto;
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -554,7 +591,7 @@
                 <div id="weeklyCalendar"></div>
             </div>
             <div class="side-panel">
-                <div class="monthly-calendar">
+                <div class="monthly-calendar" id="monthlyCalendarContainer">
                     <div class="month-navigation">
                         <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
                         <h3 id="currentMonth">September 2023</h3>
@@ -562,12 +599,32 @@
                     </div>
                     <div class="calendar-grid" id="monthlyCalendar"></div>
                 </div>
-                <div class="projects-section">
-                    <div class="projects-header">
+                <div class="projects-section" id="projectsSection">
+                    <div class="projects-header" style="position: relative;">
                         <h3>Projects</h3>
-                        <button id="addProject" class="auth-btn">Add Project</button>
+                        <button id="addProject" class="add-project-btn">+</button>
                     </div>
                     <div id="projectsList"></div>
+                </div>
+                <div class="project-modal-container" id="projectModalContainer">
+                    <div class="modal-content">
+                        <form id="projectForm">
+                            <div class="input-group">
+                                <label for="projectName">Name</label>
+                                <input type="text" id="projectName" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="projectDeadline">Deadline</label>
+                                <input type="date" id="projectDeadline" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="projectContent">Content</label>
+                                <textarea id="projectContent" rows="4" required></textarea>
+                            </div>
+                            <button type="submit" class="auth-btn">Add</button>
+                            <button type="button" class="auth-btn" onclick="closeProjectModal()">Cancel</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -993,9 +1050,7 @@ function initApp() {
         state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
         renderMonthlyCalendar();
     });
-    document.getElementById('addProject').addEventListener('click', () => {
-        elements.projectModal.style.display = 'flex';
-    });
+    document.getElementById('addProject').addEventListener('click', openProjectModal);
     document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
 
     // Initialize views
@@ -1096,6 +1151,18 @@ function toggleTaskCompletion(taskId, date, time) {
         saveUserData();
         renderWeeklyCalendar();
     }
+}
+
+function openProjectModal() {
+    document.getElementById('monthlyCalendarContainer').style.display = 'none';
+    document.getElementById('projectsSection').style.display = 'none';
+    document.getElementById('projectModalContainer').style.display = 'flex';
+}
+
+function closeProjectModal() {
+    document.getElementById('monthlyCalendarContainer').style.display = 'block';
+    document.getElementById('projectsSection').style.display = 'block';
+    document.getElementById('projectModalContainer').style.display = 'none';
 }
     </script>
 </body>
