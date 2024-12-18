@@ -721,482 +721,478 @@
     </div>
 
     <script>
-// Constants and State Management
-const state = {
-    currentUser: null,
-    currentWeek: new Date(),
-    currentMonth: new Date(),
-    selectedDate: new Date(),
-    tasks: {},
-    projects: [],
-    draggedItem: null,
-    contextTarget: null
-};
-
-// DOM Elements
-const elements = {
-    loginPage: document.getElementById('loginPage'),
-    registerPage: document.getElementById('registerPage'),
-    mainPage: document.getElementById('mainPage'),
-    loginForm: document.getElementById('loginForm'),
-    registerForm: document.getElementById('registerForm'),
-    weeklyCalendar: document.getElementById('weeklyCalendar'),
-    monthlyCalendar: document.getElementById('monthlyCalendar'),
-    projectsList: document.getElementById('projectsList'),
-    contextMenu: document.getElementById('contextMenu'),
-    taskModal: document.getElementById('taskModal'),
-    projectModal: document.getElementById('projectModal'),
-    taskForm: document.getElementById('taskForm'),
-    projectForm: document.getElementById('projectForm'),
-    itemRepeat: document.getElementById('itemRepeat')
-};
-
-// Utility Functions
-function formatDate(date) {
-    const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
-    const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(date);
-    const weekday = parts.find(part => part.type === 'weekday').value.toUpperCase();
-    const day = parts.find(part => part.type === 'day').value;
-    const month = parts.find(part => part.type === 'month').value;
-    const year = parts.find(part => part.type === 'year').value;
-    return { weekday, day, month, year };
-}
-
-function getWeekDates(date) {
-    const week = [];
-    const current = new Date(date);
-    current.setDate(current.getDate() - ((current.getDay() + 6) % 7)); // Adjust to start from Monday
-    
-    for (let i = 0; i < 7; i++) {
-        week.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-    }
-    return week;
-}
-
-function getMonthDates(date) {
-    const month = [];
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    
-    firstDay.setDate(firstDay.getDate() - ((firstDay.getDay() + 6) % 7)); // Adjust to start from Monday
-    
-    while (firstDay <= lastDay || month.length % 7 !== 0) {
-        month.push(new Date(firstDay));
-        firstDay.setDate(firstDay.getDate() + 1);
-    }
-    return month;
-}
-
-// Render Functions
-function renderWeeklyCalendar() {
-    const weekDates = getWeekDates(state.currentWeek);
-    let html = '';
-
-    weekDates.forEach(date => {
-        const dateStr = date.toISOString().split('T')[0];
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        const { weekday, day, month, year } = formatDate(date);
-        
-        html += `
-            <div class="day-row ${isWeekend ? 'weekend' : ''}">
-                <div class="date-box ${date.toDateString() === new Date().toDateString() ? 'current-day' : ''}">
-                    <div class="weekday">${weekday}</div>
-                    <div class="day-month">${month} ${day}</div>
-                    <div class="year">${year}</div>
-                </div>
-                <div class="time-box morning" data-date="${dateStr}" data-time="morning">
-                    ${renderTasks(dateStr, 'morning')}
-                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'morning')">+</button>
-                </div>
-                <div class="time-box noon" data-date="${dateStr}" data-time="noon">
-                    ${renderTasks(dateStr, 'noon')}
-                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'noon')">+</button>
-                </div>
-                <div class="time-box night" data-date="${dateStr}" data-time="night">
-                    ${renderTasks(dateStr, 'night')}
-                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'night')">+</button>
-                </div>
-            </div>
-        `;
-    });
-
-    elements.weeklyCalendar.innerHTML = html;
-    setupDragAndDrop();
-}
-
-function renderMonthlyCalendar() {
-    const monthDates = getMonthDates(state.currentMonth);
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    let html = '<div class="calendar-grid">';
-    
-    weekdays.forEach(day => {
-        html += `<div class="weekday">${day}</div>`;
-    });
-
-    monthDates.forEach(date => {
-        const isCurrentMonth = date.getMonth() === state.currentMonth.getMonth();
-        const isToday = date.toDateString() === new Date().toDateString();
-        
-        html += `
-            <div class="calendar-day ${isCurrentMonth ? '' : 'other-month'} ${isToday ? 'current-day' : ''}"
-                 onclick="selectDate(new Date('${date.toISOString()}'))">
-                ${date.getDate()}
-            </div>
-        `;
-    });
-
-    html += '</div>';
-    elements.monthlyCalendar.innerHTML = html;
-    document.getElementById('currentMonth').textContent = new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: 'long'
-    }).format(state.currentMonth);
-}
-
-// Event Handlers
-function handleLogin(e) {
-    e.preventDefault();
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-
-    // Simulate authentication
-    if (username && password) {
-        state.currentUser = { username };
-        elements.loginPage.style.display = 'none';
-        elements.mainPage.style.display = 'block';
-        loadUserData();
-    }
-}
-
-function handleRegister(e) {
-    e.preventDefault();
-    const username = document.getElementById('registerUsername').value;
-    const password = document.getElementById('registerPassword').value;
-
-    // Simulate registration
-    if (username && password) {
-        showLoginPage();
-    }
-}
-
-function handleLogout() {
-    state.currentUser = null;
-    elements.mainPage.style.display = 'none';
-    elements.loginPage.style.display = 'flex';
-}
-
-function openTaskModal(date, time, task = null) {
-    state.selectedDate = date;
-    state.selectedTime = time;
-    if (task) {
-        document.getElementById('itemName').value = task.name;
-        document.getElementById('itemType').value = task.type;
-        document.getElementById('itemRepeat').value = task.repeat;
-        elements.taskForm.dataset.taskId = task.id;
-        elements.itemRepeat.disabled = true;
-        elements.itemRepeat.classList.add('locked');
-        elements.itemRepeat.title = "Repetition cannot be edited";
-    } else {
-        elements.taskForm.reset();
-        delete elements.taskForm.dataset.taskId;
-        elements.itemRepeat.disabled = false;
-        elements.itemRepeat.classList.remove('locked');
-        elements.itemRepeat.title = "";
-    }
-    elements.taskModal.style.display = 'flex';
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-function handleTaskSubmit(e) {
-    e.preventDefault();
-    const name = document.getElementById('itemName').value;
-    const type = document.getElementById('itemType').value;
-    const repeat = document.getElementById('itemRepeat').value;
-    const taskId = elements.taskForm.dataset.taskId;
-
-    const task = {
-        id: taskId ? parseInt(taskId) : Date.now(),
-        name,
-        type,
-        repeat,
-        date: state.selectedDate,
-        time: state.selectedTime
+    // Constants and State Management
+    const state = {
+        currentUser: { username: 'guest' }, // Set a default user to bypass login
+        currentWeek: new Date(),
+        currentMonth: new Date(),
+        selectedDate: new Date(),
+        tasks: {},
+        projects: [],
+        draggedItem: null,
+        contextTarget: null
     };
 
-    const addTask = (task) => {
-        if (!state.tasks[task.date]) {
-            state.tasks[task.date] = {};
-        }
-        if (!state.tasks[task.date][task.time]) {
-            state.tasks[task.date][task.time] = [];
-        }
-        state.tasks[task.date][task.time].push(task);
+    // DOM Elements
+    const elements = {
+        loginPage: document.getElementById('loginPage'),
+        registerPage: document.getElementById('registerPage'),
+        mainPage: document.getElementById('mainPage'),
+        loginForm: document.getElementById('loginForm'),
+        registerForm: document.getElementById('registerForm'),
+        weeklyCalendar: document.getElementById('weeklyCalendar'),
+        monthlyCalendar: document.getElementById('monthlyCalendar'),
+        projectsList: document.getElementById('projectsList'),
+        contextMenu: document.getElementById('contextMenu'),
+        taskModal: document.getElementById('taskModal'),
+        projectModal: document.getElementById('projectModal'),
+        taskForm: document.getElementById('taskForm'),
+        projectForm: document.getElementById('projectForm'),
+        itemRepeat: document.getElementById('itemRepeat')
     };
 
-    if (taskId) {
-        // Update existing task
-        const oldTask = state.tasks[state.selectedDate][state.selectedTime].find(t => t.id === task.id);
-        Object.assign(oldTask, task);
-    } else {
-        // Add new task
-        addTask(task);
+    // Utility Functions
+    function formatDate(date) {
+        const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+        const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(date);
+        const weekday = parts.find(part => part.type === 'weekday').value.toUpperCase();
+        const day = parts.find(part => part.type === 'day').value;
+        const month = parts.find(part => part.type === 'month').value;
+        const year = parts.find(part => part.type === 'year').value;
+        return { weekday, day, month, year };
+    }
 
-        if (repeat !== 'none') {
-            let currentDate = new Date(state.selectedDate);
-            for (let i = 0; i < 30; i++) { // Repeat for the next 30 days/weeks
-                if (repeat === 'daily') {
-                    currentDate.setDate(currentDate.getDate() + 1);
-                } else if (repeat === 'weekly') {
-                    currentDate.setDate(currentDate.getDate() + 7);
+    function getWeekDates(date) {
+        const week = [];
+        const current = new Date(date);
+        current.setDate(current.getDate() - ((current.getDay() + 6) % 7)); // Adjust to start from Monday
+        
+        for (let i = 0; i < 7; i++) {
+            week.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+        }
+        return week;
+    }
+
+    function getMonthDates(date) {
+        const month = [];
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        
+        firstDay.setDate(firstDay.getDate() - ((firstDay.getDay() + 6) % 7)); // Adjust to start from Monday
+        
+        while (firstDay <= lastDay || month.length % 7 !== 0) {
+            month.push(new Date(firstDay));
+            firstDay.setDate(firstDay.getDate() + 1);
+        }
+        return month;
+    }
+
+    // Render Functions
+    function renderWeeklyCalendar() {
+        const weekDates = getWeekDates(state.currentWeek);
+        let html = '';
+
+        weekDates.forEach(date => {
+            const dateStr = date.toISOString().split('T')[0];
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            const { weekday, day, month, year } = formatDate(date);
+            
+            html += `
+                <div class="day-row ${isWeekend ? 'weekend' : ''}">
+                    <div class="date-box ${date.toDateString() === new Date().toDateString() ? 'current-day' : ''}">
+                        <div class="weekday">${weekday}</div>
+                        <div class="day-month">${month} ${day}</div>
+                        <div class="year">${year}</div>
+                    </div>
+                    <div class="time-box morning" data-date="${dateStr}" data-time="morning">
+                        ${renderTasks(dateStr, 'morning')}
+                        <button class="add-btn" onclick="openTaskModal('${dateStr}', 'morning')">+</button>
+                    </div>
+                    <div class="time-box noon" data-date="${dateStr}" data-time="noon">
+                        ${renderTasks(dateStr, 'noon')}
+                        <button class="add-btn" onclick="openTaskModal('${dateStr}', 'noon')">+</button>
+                    </div>
+                    <div class="time-box night" data-date="${dateStr}" data-time="night">
+                        ${renderTasks(dateStr, 'night')}
+                        <button class="add-btn" onclick="openTaskModal('${dateStr}', 'night')">+</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        elements.weeklyCalendar.innerHTML = html;
+        setupDragAndDrop();
+    }
+
+    function renderMonthlyCalendar() {
+        const monthDates = getMonthDates(state.currentMonth);
+        const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        let html = '<div class="calendar-grid">';
+        
+        weekdays.forEach(day => {
+            html += `<div class="weekday">${day}</div>`;
+        });
+
+        monthDates.forEach(date => {
+            const isCurrentMonth = date.getMonth() === state.currentMonth.getMonth();
+            const isToday = date.toDateString() === new Date().toDateString();
+            
+            html += `
+                <div class="calendar-day ${isCurrentMonth ? '' : 'other-month'} ${isToday ? 'current-day' : ''}"
+                     onclick="selectDate(new Date('${date.toISOString()}'))">
+                    ${date.getDate()}
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        elements.monthlyCalendar.innerHTML = html;
+        document.getElementById('currentMonth').textContent = new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'long'
+        }).format(state.currentMonth);
+    }
+
+    // Event Handlers
+    function handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+
+        // Simulate authentication
+        if (username && password) {
+            state.currentUser = { username };
+            elements.loginPage.style.display = 'none';
+            elements.mainPage.style.display = 'block';
+            loadUserData();
+        }
+    }
+
+    function handleRegister(e) {
+        e.preventDefault();
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+
+        // Simulate registration
+        if (username && password) {
+            showLoginPage();
+        }
+    }
+
+    function handleLogout() {
+        state.currentUser = null;
+        elements.mainPage.style.display = 'none';
+        elements.loginPage.style.display = 'flex';
+    }
+
+    function openTaskModal(date, time, task = null) {
+        state.selectedDate = date;
+        state.selectedTime = time;
+        if (task) {
+            document.getElementById('itemName').value = task.name;
+            document.getElementById('itemType').value = task.type;
+            document.getElementById('itemRepeat').value = task.repeat;
+            elements.taskForm.dataset.taskId = task.id;
+            elements.itemRepeat.disabled = true;
+            elements.itemRepeat.classList.add('locked');
+            elements.itemRepeat.title = "Repetition cannot be edited";
+        } else {
+            elements.taskForm.reset();
+            delete elements.taskForm.dataset.taskId;
+            elements.itemRepeat.disabled = false;
+            elements.itemRepeat.classList.remove('locked');
+            elements.itemRepeat.title = "";
+        }
+        elements.taskModal.style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function handleTaskSubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('itemName').value;
+        const type = document.getElementById('itemType').value;
+        const repeat = document.getElementById('itemRepeat').value;
+        const taskId = elements.taskForm.dataset.taskId;
+
+        const task = {
+            id: taskId ? parseInt(taskId) : Date.now(),
+            name,
+            type,
+            repeat,
+            date: state.selectedDate,
+            time: state.selectedTime
+        };
+
+        const addTask = (task) => {
+            if (!state.tasks[task.date]) {
+                state.tasks[task.date] = {};
+            }
+            if (!state.tasks[task.date][task.time]) {
+                state.tasks[task.date][task.time] = [];
+            }
+            state.tasks[task.date][task.time].push(task);
+        };
+
+        if (taskId) {
+            // Update existing task
+            const oldTask = state.tasks[state.selectedDate][state.selectedTime].find(t => t.id === task.id);
+            Object.assign(oldTask, task);
+        } else {
+            // Add new task
+            addTask(task);
+
+            if (repeat !== 'none') {
+                let currentDate = new Date(state.selectedDate);
+                for (let i = 0; i < 30; i++) { // Repeat for the next 30 days/weeks
+                    if (repeat === 'daily') {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    } else if (repeat === 'weekly') {
+                        currentDate.setDate(currentDate.getDate() + 7);
+                    }
+                    const newTask = { ...task, id: Date.now(), date: currentDate.toISOString().split('T')[0] };
+                    addTask(newTask);
                 }
-                const newTask = { ...task, id: Date.now(), date: currentDate.toISOString().split('T')[0] };
-                addTask(newTask);
             }
         }
+
+        saveUserData();
+        renderWeeklyCalendar();
+        closeModal('taskModal');
     }
 
-    saveUserData();
-    renderWeeklyCalendar();
-    closeModal('taskModal');
-}
+    function handleProjectSubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('projectName').value;
+        const deadline = document.getElementById('projectDeadline').value;
+        const content = document.getElementById('projectContent').value;
 
-function handleProjectSubmit(e) {
-    e.preventDefault();
-    const name = document.getElementById('projectName').value;
-    const deadline = document.getElementById('projectDeadline').value;
-    const content = document.getElementById('projectContent').value;
+        fetch('/api/projects', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, deadline, content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.id) {
+                state.projects.push({ id: data.id, name, deadline, content });
+                renderProjects();
+                closeModal('projectModal');
+            } else {
+                console.error('Failed to create project');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
-    fetch('/api/projects', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name, deadline, content })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.id) {
-            state.projects.push({ id: data.id, name, deadline, content });
-            renderProjects();
-            closeModal('projectModal');
-        } else {
-            console.error('Failed to create project');
+    // Drag and Drop Implementation
+    function setupDragAndDrop() {
+        const draggables = document.querySelectorAll('.task-item, .event-item');
+        const dropZones = document.querySelectorAll('.time-box');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', handleDragStart);
+            draggable.addEventListener('dragend', handleDragEnd);
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', handleDragOver);
+            zone.addEventListener('drop', handleDrop);
+        });
+    }
+
+    function handleDragStart(e) {
+        state.draggedItem = e.target;
+        e.target.classList.add('dragging');
+    }
+
+    function handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        const dropZone = e.currentTarget;
+        dropZone.classList.remove('drag-over');
+
+        if (state.draggedItem) {
+            const oldDate = state.draggedItem.dataset.date;
+            const oldTime = state.draggedItem.dataset.time;
+            const newDate = dropZone.dataset.date;
+            const newTime = dropZone.dataset.time;
+
+            // Update task data
+            const taskId = parseInt(state.draggedItem.dataset.taskId);
+            moveTask(taskId, oldDate, oldTime, newDate, newTime);
+            renderWeeklyCalendar();
         }
-    })
-    .catch(error => console.error('Error:', error));
-}
+    }
 
-// Drag and Drop Implementation
-function setupDragAndDrop() {
-    const draggables = document.querySelectorAll('.task-item, .event-item');
-    const dropZones = document.querySelectorAll('.time-box');
+    // Data Management
+    function saveUserData() {
+        if (state.currentUser) {
+            localStorage.setItem(`tasks_${state.currentUser.username}`, JSON.stringify(state.tasks));
+            localStorage.setItem(`projects_${state.currentUser.username}`, JSON.stringify(state.projects));
+        }
+    }
 
-    draggables.forEach(draggable => {
-        draggable.addEventListener('dragstart', handleDragStart);
-        draggable.addEventListener('dragend', handleDragEnd);
-    });
+    function loadUserData() {
+        if (state.currentUser) {
+            const tasks = localStorage.getItem(`tasks_${state.currentUser.username}`);
+            const projects = localStorage.getItem(`projects_${state.currentUser.username}`);
+            
+            if (tasks) state.tasks = JSON.parse(tasks);
+            if (projects) state.projects = JSON.parse(projects);
+            
+            renderWeeklyCalendar();
+            renderMonthlyCalendar();
+            renderProjects();
+        }
+    }
 
-    dropZones.forEach(zone => {
-        zone.addEventListener('dragover', handleDragOver);
-        zone.addEventListener('drop', handleDrop);
-    });
-}
+    // Initialize Application
+    function initApp() {
+        // Event Listeners
+        elements.loginForm.addEventListener('submit', handleLogin);
+        elements.registerForm.addEventListener('submit', handleRegister);
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
+        document.getElementById('prevWeek').addEventListener('click', () => {
+            state.currentWeek.setDate(state.currentWeek.getDate() - 7);
+            renderWeeklyCalendar();
+        });
+        document.getElementById('nextWeek').addEventListener('click', () => {
+            state.currentWeek.setDate(state.currentWeek.getDate() + 7);
+            renderWeeklyCalendar();
+        });
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
+            renderMonthlyCalendar();
+        });
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
+            renderMonthlyCalendar();
+        });
+        document.getElementById('addProject').addEventListener('click', openProjectModal);
+        document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
 
-function handleDragStart(e) {
-    state.draggedItem = e.target;
-    e.target.classList.add('dragging');
-}
-
-function handleDragEnd(e) {
-    e.target.classList.remove('dragging');
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    e.currentTarget.classList.add('drag-over');
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    const dropZone = e.currentTarget;
-    dropZone.classList.remove('drag-over');
-
-    if (state.draggedItem) {
-        const oldDate = state.draggedItem.dataset.date;
-        const oldTime = state.draggedItem.dataset.time;
-        const newDate = dropZone.dataset.date;
-        const newTime = dropZone.dataset.time;
-
-        // Update task data
-        const taskId = parseInt(state.draggedItem.dataset.taskId);
-        moveTask(taskId, oldDate, oldTime, newDate, newTime);
+        // Initialize views
         renderWeeklyCalendar();
-    }
-}
-
-// Data Management
-function saveUserData() {
-    if (state.currentUser) {
-        localStorage.setItem(`tasks_${state.currentUser.username}`, JSON.stringify(state.tasks));
-        localStorage.setItem(`projects_${state.currentUser.username}`, JSON.stringify(state.projects));
-    }
-}
-
-function loadUserData() {
-    if (state.currentUser) {
-        const tasks = localStorage.getItem(`tasks_${state.currentUser.username}`);
-        const projects = localStorage.getItem(`projects_${state.currentUser.username}`);
+        renderMonthlyCalendar();
         
-        if (tasks) state.tasks = JSON.parse(tasks);
-        if (projects) state.projects = JSON.parse(projects);
-        
-        renderWeeklyCalendar();
-        renderMonthlyCalendar();
-        renderProjects();
-    }
-}
-
-// Initialize Application
-function initApp() {
-    // Event Listeners
-    elements.loginForm.addEventListener('submit', handleLogin);
-    elements.registerForm.addEventListener('submit', handleRegister);
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
-    document.getElementById('prevWeek').addEventListener('click', () => {
-        state.currentWeek.setDate(state.currentWeek.getDate() - 7);
-        renderWeeklyCalendar();
-    });
-    document.getElementById('nextWeek').addEventListener('click', () => {
-        state.currentWeek.setDate(state.currentWeek.getDate() + 7);
-        renderWeeklyCalendar();
-    });
-    document.getElementById('prevMonth').addEventListener('click', () => {
-        state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
-        renderMonthlyCalendar();
-    });
-    document.getElementById('nextMonth').addEventListener('click', () => {
-        state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
-        renderMonthlyCalendar();
-    });
-    document.getElementById('addProject').addEventListener('click', openProjectModal);
-    document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
-
-    // Initialize views
-    renderWeeklyCalendar();
-    renderMonthlyCalendar();
-    
-    // Handle authentication state
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        state.currentUser = JSON.parse(savedUser);
+        // Directly show the main page
         elements.loginPage.style.display = 'none';
         elements.mainPage.style.display = 'block';
         loadUserData();
     }
-}
 
-// Start the application
-document.addEventListener('DOMContentLoaded', initApp);
+    // Start the application
+    document.addEventListener('DOMContentLoaded', initApp);
 
-// Context Menu
-document.addEventListener('contextmenu', (e) => {
-    if (e.target.closest('.task-item') || e.target.closest('.event-item')) {
-        e.preventDefault();
-        const contextMenu = elements.contextMenu;
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = `${e.pageX}px`;
-        contextMenu.style.top = `${e.pageY}px`;
-        state.contextTarget = e.target.closest('.task-item, .event-item');
-    }
-});
-
-document.addEventListener('click', () => {
-    elements.contextMenu.style.display = 'none';
-});
-
-elements.contextMenu.addEventListener('click', (e) => {
-    const action = e.target.dataset.action;
-    if (action === 'open' && state.contextTarget) {
-        const taskId = parseInt(state.contextTarget.dataset.taskId);
-        const date = state.contextTarget.dataset.date;
-        const time = state.contextTarget.dataset.time;
-        const task = state.tasks[date][time].find(t => t.id === taskId);
-        openTaskModal(date, time, task);
-    } else if (action === 'delete' && state.contextTarget) {
-        deleteTask(state.contextTarget.dataset.taskId);
-        renderWeeklyCalendar();
-    }
-    elements.contextMenu.style.display = 'none';
-});
-
-// Additional utility functions
-function moveTask(taskId, oldDate, oldTime, newDate, newTime) {
-    const task = state.tasks[oldDate][oldTime].find(t => t.id === taskId);
-    if (task) {
-        // Remove from old position
-        state.tasks[oldDate][oldTime] = state.tasks[oldDate][oldTime].filter(t => t.id !== taskId);
-        
-        // Add to new position
-        if (!state.tasks[newDate]) state.tasks[newDate] = {};
-        if (!state.tasks[newDate][newTime]) state.tasks[newDate][newTime] = [];
-        state.tasks[newDate][newTime].push({...task, date: newDate, time: newTime});
-        
-        saveUserData();
-    }
-}
-
-function deleteTask(taskId) {
-    Object.keys(state.tasks).forEach(date => {
-        Object.keys(state.tasks[date]).forEach(time => {
-            state.tasks[date][time] = state.tasks[date][time].filter(task => task.id !== parseInt(taskId));
-        });
+    // Context Menu
+    document.addEventListener('contextmenu', (e) => {
+        if (e.target.closest('.task-item') || e.target.closest('.event-item')) {
+            e.preventDefault();
+            const contextMenu = elements.contextMenu;
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = `${e.pageX}px`;
+            contextMenu.style.top = `${e.pageY}px`;
+            state.contextTarget = e.target.closest('.task-item, .event-item');
+        }
     });
-    saveUserData();
-}
 
-function renderTasks(date, time) {
-    if (!state.tasks[date] || !state.tasks[date][time]) return '';
-    
-    return state.tasks[date][time].map(task => `
-        <div class="${task.type}-item ${task.completed ? 'completed' : ''}" 
-             draggable="true"
-             data-task-id="${task.id}"
-             data-date="${date}"
-             data-time="${time}">
-            <i class="fas fa-${task.type === 'task' ? 'tasks' : 'calendar'}"></i>
-            <span>${task.name}</span>
-            ${task.repeat !== 'none' ? `<i class="fas fa-sync-alt"></i>` : ''}
-            ${task.type === 'task' ? `<input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTaskCompletion(${task.id}, '${date}', '${time}')">`
-            :'<input type="checkbox" style="visibility: hidden;">'}
-        </div>
-    `).join('');
-}
+    document.addEventListener('click', () => {
+        elements.contextMenu.style.display = 'none';
+    });
 
-function toggleTaskCompletion(taskId, date, time) {
-    const task = state.tasks[date][time].find(t => t.id === taskId);
-    if (task) {
-        task.completed = !task.completed;
-        saveUserData();
-        renderWeeklyCalendar();
+    elements.contextMenu.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        if (action === 'open' && state.contextTarget) {
+            const taskId = parseInt(state.contextTarget.dataset.taskId);
+            const date = state.contextTarget.dataset.date;
+            const time = state.contextTarget.dataset.time;
+            const task = state.tasks[date][time].find(t => t.id === taskId);
+            openTaskModal(date, time, task);
+        } else if (action === 'delete' && state.contextTarget) {
+            deleteTask(state.contextTarget.dataset.taskId);
+            renderWeeklyCalendar();
+        }
+        elements.contextMenu.style.display = 'none';
+    });
+
+    // Additional utility functions
+    function moveTask(taskId, oldDate, oldTime, newDate, newTime) {
+        const task = state.tasks[oldDate][oldTime].find(t => t.id === taskId);
+        if (task) {
+            // Remove from old position
+            state.tasks[oldDate][oldTime] = state.tasks[oldDate][oldTime].filter(t => t.id !== taskId);
+            
+            // Add to new position
+            if (!state.tasks[newDate]) state.tasks[newDate] = {};
+            if (!state.tasks[newDate][newTime]) state.tasks[newDate][newTime] = [];
+            state.tasks[newDate][newTime].push({...task, date: newDate, time: newTime});
+            
+            saveUserData();
+        }
     }
-}
 
-function openProjectModal() {
-    document.getElementById('monthlyCalendarContainer').style.display = 'none';
-    document.getElementById('projectsSection').style.display = 'none';
-    document.getElementById('projectModalContainer').style.display = 'flex';
-}
+    function deleteTask(taskId) {
+        Object.keys(state.tasks).forEach(date => {
+            Object.keys(state.tasks[date]).forEach(time => {
+                state.tasks[date][time] = state.tasks[date][time].filter(task => task.id !== parseInt(taskId));
+            });
+        });
+        saveUserData();
+    }
 
-function closeProjectModal() {
-    document.getElementById('monthlyCalendarContainer').style.display = 'block';
-    document.getElementById('projectsSection').style.display = 'block';
-    document.getElementById('projectModalContainer').style.display = 'none';
-}
+    function renderTasks(date, time) {
+        if (!state.tasks[date] || !state.tasks[date][time]) return '';
+        
+        return state.tasks[date][time].map(task => `
+            <div class="${task.type}-item ${task.completed ? 'completed' : ''}" 
+                 draggable="true"
+                 data-task-id="${task.id}"
+                 data-date="${date}"
+                 data-time="${time}">
+                <i class="fas fa-${task.type === 'task' ? 'tasks' : 'calendar'}"></i>
+                <span>${task.name}</span>
+                ${task.repeat !== 'none' ? `<i class="fas fa-sync-alt"></i>` : ''}
+                ${task.type === 'task' ? `<input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTaskCompletion(${task.id}, '${date}', '${time}')">`
+                :'<input type="checkbox" style="visibility: hidden;">'}
+            </div>
+        `).join('');
+    }
+
+    function toggleTaskCompletion(taskId, date, time) {
+        const task = state.tasks[date][time].find(t => t.id === taskId);
+        if (task) {
+            task.completed = !task.completed;
+            saveUserData();
+            renderWeeklyCalendar();
+        }
+    }
+
+    function openProjectModal() {
+        document.getElementById('monthlyCalendarContainer').style.display = 'none';
+        document.getElementById('projectsSection').style.display = 'none';
+        document.getElementById('projectModalContainer').style.display = 'flex';
+    }
+
+    function closeProjectModal() {
+        document.getElementById('monthlyCalendarContainer').style.display = 'block';
+        document.getElementById('projectsSection').style.display = 'block';
+        document.getElementById('projectModalContainer').style.display = 'none';
+    }
     </script>
 </body>
 </html>
