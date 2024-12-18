@@ -481,6 +481,13 @@
             font-size: 0.9rem;
         }
 
+        .success-message {
+            color: #28a745; /* Green color */
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
         .weekday {
             text-align: center;
             font-weight: bold;
@@ -891,12 +898,13 @@ async function handleRegister(e) {
     });
 
     const result = await response.json();
+    result.message = "Create account successfully"
     if (response.ok) {
-        document.getElementById('registerError').textContent = result.message;
-        document.getElementById('registerError').innerHTML += '<br><a href="#" class="auth-link" id="toLogin">Back to Login</a>';
-        document.getElementById('toLogin').addEventListener('click', showLoginPage);
+        document.getElementById('registerError').textContent = result.message; // Show success message
+        document.getElementById('registerError').classList.add('success-message'); // Add success message class
     } else {
         document.getElementById('registerError').textContent = result.error;
+        document.getElementById('registerError').classList.remove('success-message'); // Remove success message class
     }
 }
 
