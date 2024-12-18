@@ -722,8 +722,9 @@
 
     <script>
     // Constants and State Management
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     const state = {
-        currentUser: { username: 'guest' }, // Set a default user to bypass login
+        currentUser: currentUser || { username: 'test' },
         currentWeek: new Date(),
         currentMonth: new Date(),
         selectedDate: new Date(),
@@ -862,7 +863,8 @@
 
         // Simulate authentication
         if (username && password) {
-            state.currentUser = { username };
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            currentUser = { username };
             elements.loginPage.style.display = 'none';
             elements.mainPage.style.display = 'block';
             loadUserData();
@@ -1039,16 +1041,18 @@
 
     // Data Management
     function saveUserData() {
-        if (state.currentUser) {
-            localStorage.setItem(`tasks_${state.currentUser.username}`, JSON.stringify(state.tasks));
-            localStorage.setItem(`projects_${state.currentUser.username}`, JSON.stringify(state.projects));
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (currentUser) {
+            localStorage.setItem(`tasks_${currentUser.username}`, JSON.stringify(state.tasks));
+            localStorage.setItem(`projects_${currentUser.username}`, JSON.stringify(state.projects));
         }
     }
 
     function loadUserData() {
-        if (state.currentUser) {
-            const tasks = localStorage.getItem(`tasks_${state.currentUser.username}`);
-            const projects = localStorage.getItem(`projects_${state.currentUser.username}`);
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));  
+        if (currentUser) {
+            const tasks = localStorage.getItem(`tasks_${currentUser.username}`);
+            const projects = localStorage.getItem(`projects_${currentUser.username}`);
             
             if (tasks) state.tasks = JSON.parse(tasks);
             if (projects) state.projects = JSON.parse(projects);
