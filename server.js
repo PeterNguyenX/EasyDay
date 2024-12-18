@@ -82,19 +82,24 @@ function isAuthenticated(req, res, next) {
 
 // Root route
 app.get('/', (req, res) => {
-  res.redirect('/index.html');
+  res.redirect('/login.html'); // Redirect to login.html instead of index.html
 });
 
-app.get('/index.html', isAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, 'routes', 'index.html'));
-});
+// Remove this route as index.html does not exist
+// app.get('/index.html', isAuthenticated, (req, res) => {
+//   res.sendFile(path.join(__dirname, 'routes', 'index.html'));
+// });
 
-app.get('/login.html', (req, res) => { // Ensure this route is correct
+app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'routes', 'login.html'));
 });
 
-app.get('/login', (req, res) => { // Add this route to handle /login
+app.get('/login', (req, res) => {
   res.redirect('/login.html');
+});
+
+app.get('/main.html', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'routes', 'main.html'));
 });
 
 // Authentication routes
@@ -131,7 +136,7 @@ app.post('/api/login', (req, res) => {
       const match = await bcrypt.compare(password, user.password);
       if (match) {
         req.session.userId = user.id;
-        res.json({ success: true, redirect: '/index.html' }); // Add redirect URL
+        res.json({ success: true, redirect: '/main.html' }); // Correct redirect URL
       } else {
         res.status(400).json({ error: 'Wrong username or password' }); // Update error message
       }

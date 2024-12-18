@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyDay Calendar - Main</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0A192F;
+            --secondary: #172A46;
+            --accent: #64FFDA;
+            --text: #CCD6F6;
+            --card-bg: rgba(23, 42, 70, 0.8);
+            --morning: rgba(100, 255, 218, 0.2);
+            --noon: rgba(100, 255, 218, 0.15);
+            --night: rgba(100, 255, 218, 0.1);
+            --weekend: rgba(23, 42, 70, 0.9);
+            --weekend-text: #ffc400;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: var(--primary);
+            color: var(--text);
+            min-block-size: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--secondary);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            color: var(--accent);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .content {
+            display: flex;
+            padding: 1rem;
+            gap: 1rem;
+            height: calc(100vh - 4rem);
+        }
+
+        .vertical-calendar {
+            flex: 3;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .week-navigation {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .week-navigation button {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            background: var(--secondary);
+            color: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+
+        .week-navigation button:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .day-row {
+            display: grid;
+            grid-template-columns: 100px repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+            min-height: calc((100% - 3rem) / 7);
+        }
+
+        .time-labels {
+            display: grid;
+            align-items: center;
+            grid-template-columns: 100px repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .time-labels div:nth-child(2) { color: var(--morning); }
+        .time-labels div:nth-child(3) { color: var(--noon); }
+        .time-labels div:nth-child(4) { color: var(--night); }
+
+        .date-box {
+            background: var(--secondary);
+            border-radius: 10px;
+            padding: 0.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .date-box .weekday {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .date-box .weekday:nth-child(6), .date-box .weekday:nth-child(7) {
+            color: #ffc400;
+        }
+
+        .date-box .day-month {
+            font-size: 1rem;
+        }
+
+        .date-box .year {
+            font-size: 1rem;
+            opacity: 0.4;
+        }
+
+        .time-box {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 1rem;
+            position: relative;
+            min-height: 100px;
+        }
+
+        .time-box.morning { background: var(--morning); }
+        .time-box.noon { background: var(--noon); }
+        .time-box.night { background: var(--night); }
+
+        .side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .monthly-calendar {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .month-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .calendar-grid > div {
+            flex: 1 1 calc(100% / 7 - 0.5rem);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--secondary);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .projects-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .add-project-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .add-project-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(100, 255, 218, 0.5);
+        }
+
+        .project-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .add-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .time-box:hover .add-btn {
+            opacity: 1;
+        }
+
+        .current-day {
+            border: 2px solid var(--accent);
+        }
+
+        .weekend {
+            background: var(--weekend);
+        }
+
+        .weekend .weekday {
+            color: var(--weekend-text);
+        }
+
+        .task-item, .event-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem;
+            margin-bottom: 0.3rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            justify-content: space-between;
+            opacity: 0.99;
+        }
+
+        .task-item input[type="checkbox"], .event-item input[type="checkbox"] {
+            margin-left: auto;
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent);
+        }
+
+        .task-item.completed, .event-item.completed {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .locked {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            cursor: not-allowed;
+        }
+
+            </style>
+        </head>
+        <body>
+            <div class="main-container">
+                <nav class="navbar">
+                    <div class="logo">EasyDay</div>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </nav>
+                <div class="content">
+                    <div class="vertical-calendar">
+                        <div class="week-navigation">
+                            <button id="prevWeek">&lt;</button>
+                            <button id="nextWeek">&gt;</button>
+                        </div>
+                        <div class="time-labels">
+                            <div>Time</div>
+                            <div>Morning</div>
+                            <div>Noon</div>
+                            <div>Night</div>
+                        </div>
+                        <div id="weeklyCalendar"></div>
+                    </div>
+                    <div class="side-panel">
+                        <div class="monthly-calendar">
+                            <div class="month-navigation">
+                                <button id="prevMonth">&lt;</button>
+                                <div id="currentMonth">January 2023</div>
+                                <button id="nextMonth">&gt;</button>
+                            </div>
+                            <div class="calendar-grid" id="monthlyCalendar"></div>
+                        </div>
+                        <div class="projects-section">
+                            <button class="add-project-btn" id="addProject">+</button>
+                            <div id="projectsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Constants and State Management
+                const state = {
+                    currentUser: null,
+                    currentWeek: new Date(),
+                    currentMonth: new Date(),
+                    selectedDate: new Date(),
+                    tasks: {},
+                    projects: [],
+                    draggedItem: null,
+                    contextTarget: null
+                };
+
+                // DOM Elements
+                const elements = {
+                    weeklyCalendar: document.getElementById('weeklyCalendar'),
+                    monthlyCalendar: document.getElementById('monthlyCalendar'),
+                    projectsList: document.getElementById('projectsList'),
+                    logoutBtn: document.getElementById('logoutBtn')
+                };
+
+                // Utility Functions
+                function formatDate(date) {
+                    const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+                    const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(date);
+                    const weekday = parts.find(part => part.type === 'weekday').value.toUpperCase();
+                    const day = parts.find(part => part.type === 'day').value;
+                    const month = parts.find(part => part.type === 'month').value;
+                    const year = parts.find(part => part.type === 'year').value;
+                    return { weekday, day, month, year };
+                }
+
+                function getWeekDates(date) {
+                    const week = [];
+                    const current = new Date(date);
+                    current.setDate(current.getDate() - ((current.getDay() + 6) % 7)); // Adjust to start from Monday
+
+                    for (let i = 0; i < 7; i++) {
+                        week.push(new Date(current));
+                        current.setDate(current.getDate() + 1);
+                    }
+                    return week;
+                }
+
+                function getMonthDates(date) {
+                    const month = [];
+                    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+                    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+                    firstDay.setDate(firstDay.getDate() - ((firstDay.getDay() + 6) % 7)); // Adjust to start from Monday
+
+                    while (firstDay <= lastDay || month.length % 7 !== 0) {
+                        month.push(new Date(firstDay));
+                        firstDay.setDate(firstDay.getDate() + 1);
+                    }
+                    return month;
+                }
+
+                // Render Functions
+                function renderWeeklyCalendar() {
+                    const weekDates = getWeekDates(state.currentWeek);
+                    let html = '';
+
+                    weekDates.forEach(date => {
+                        const dateStr = date.toISOString().split('T')[0];
+                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                        const { weekday, day, month, year } = formatDate(date);
+
+                        html += `
+                            <div class="day-row ${isWeekend ? 'weekend' : ''}">
+                                <div class="date-box ${date.toDateString() === new Date().toDateString() ? 'current-day' : ''}">
+                                    <div class="weekday">${weekday}</div>
+                                    <div class="day-month">${month} ${day}</div>
+                                    <div class="year">${year}</div>
+                                </div>
+                                <div class="time-box morning" data-date="${dateStr}" data-time="morning">
+                                    ${renderTasks(dateStr, 'morning')}
+                                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'morning')">+</button>
+                                </div>
+                                <div class="time-box noon" data-date="${dateStr}" data-time="noon">
+                                    ${renderTasks(dateStr, 'noon')}
+                                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'noon')">+</button>
+                                </div>
+                                <div class="time-box night" data-date="${dateStr}" data-time="night">
+                                    ${renderTasks(dateStr, 'night')}
+                                    <button class="add-btn" onclick="openTaskModal('${dateStr}', 'night')">+</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    elements.weeklyCalendar.innerHTML = html;
+                    setupDragAndDrop();
+                }
+
+                function renderMonthlyCalendar() {
+                    const monthDates = getMonthDates(state.currentMonth);
+                    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    let html = '<div class="calendar-grid">';
+
+                    weekdays.forEach(day => {
+                        html += `<div class="weekday">${day}</div>`;
+                    });
+
+                    monthDates.forEach(date => {
+                        const isCurrentMonth = date.getMonth() === state.currentMonth.getMonth();
+                        const isToday = date.toDateString() === new Date().toDateString();
+
+                        html += `
+                            <div class="calendar-day ${isCurrentMonth ? '' : 'other-month'} ${isToday ? 'current-day' : ''}"
+                                 onclick="selectDate(new Date('${date.toISOString()}'))">
+                                ${date.getDate()}
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    elements.monthlyCalendar.innerHTML = html;
+                    document.getElementById('currentMonth').textContent = new Intl.DateTimeFormat('en-US', {
+                        year: 'numeric',
+                        month: 'long'
+                    }).format(state.currentMonth);
+                }
+
+                // Event Handlers
+                async function handleLogout() {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/login.html';
+                    }
+                }
+
+                elements.logoutBtn.addEventListener('click', handleLogout);
+
+                // Initialize Application
+                function initApp() {
+                    // Event Listeners
+                    document.getElementById('prevWeek').addEventListener('click', () => {
+                        state.currentWeek.setDate(state.currentWeek.getDate() - 7);
+                        renderWeeklyCalendar();
+                    });
+                    document.getElementById('nextWeek').addEventListener('click', () => {
+                        state.currentWeek.setDate(state.currentWeek.getDate() + 7);
+                        renderWeeklyCalendar();
+                    });
+                    document.getElementById('prevMonth').addEventListener('click', () => {
+                        state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
+                        renderMonthlyCalendar();
+                    });
+                    document.getElementById('nextMonth').addEventListener('click', () => {
+                        state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
+                        renderMonthlyCalendar();
+                    });
+                    document.getElementById('addProject').addEventListener('click', openProjectModal);
+
+                    // Initialize views
+                    renderWeeklyCalendar();
+                    renderMonthlyCalendar();
+
+                    // Handle authentication state
+                    const savedUser = localStorage.getItem('currentUser');
+                    if (savedUser) {
+                        state.currentUser = JSON.parse(savedUser);
+                        loadUserData();
+                    }
+                }
+
+                // Start the application
+                document.addEventListener('DOMContentLoaded', initApp);
+            </script>
+        </body>
+        </html>
