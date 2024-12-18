@@ -522,7 +522,7 @@
             display: none;
             flex-direction: column;
             gap: 1rem;
-            background: rgba(255, 255, 255, 0.1); /* Set background color to match input fields */
+            background: var(--secondary); /* Set background color to match input fields */
             border-radius: 15px;
             padding: 1rem; /* Add padding to merge with the space of the monthly calendar and projects list */
             backdrop-filter: blur(10px);
@@ -533,9 +533,12 @@
         }
 
         .project-modal-container .modal-content {
-            background: rgba(255, 255, 255, 0.1); /* Match background color */
+            background: var(--secondary); /* Match background color */
             border-radius: 15px;
             padding: 0; /* Remove padding from the content */
+            width: 100%; /* Make it as wide as the side panel */
+            height: 100%; /* Make it as tall as the side panel */
+
         }
 
         .project-modal-container .input-group {
