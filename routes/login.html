@@ -402,6 +402,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             justify-content: space-between; /* Add this line to space out the checkbox */
+            opacity: 0.99; /* Set opacity to 0.99 */
         }
 
         .task-item input[type="checkbox"], .event-item input[type="checkbox"] {
@@ -565,9 +566,6 @@
                     <div class="projects-header">
                         <h3>Projects</h3>
                         <button id="addProject" class="auth-btn">Add Project</button>
-                        <button id="trashBtn" class="auth-btn">
-                            <i class="fas fa-trash"></i>
-                        </button>
                     </div>
                     <div id="projectsList"></div>
                 </div>
