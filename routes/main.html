@@ -564,6 +564,12 @@
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 0 0 2px var(--accent);
         }
+
+        .auth-btn.cancel {
+            margin-top: 10px;
+            background: var(--secondary);
+            color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -691,7 +697,7 @@
                     </select>
                 </div>
                 <button type="submit" class="auth-btn">Add</button>
-                <button type="button" class="auth-btn" onclick="closeModal('taskModal')">Cancel</button>
+                <button type="button" class="auth-btn cancel" onclick="closeModal('taskModal')">Cancel</button>
             </form>
         </div>
     </div>
