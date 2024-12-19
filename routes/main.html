@@ -561,7 +561,7 @@
 
         .project-modal-container .input-group input,
         .project-modal-container .input-group textarea {
-            background: var(--secondary); /* Match background color */
+            background: rgba(255, 255, 255, 0.1); /* Change background color to grey */
             border: none; /* Remove border */
             border-radius: 8px;
             padding: 0.8rem;
@@ -573,13 +573,17 @@
 
         .project-modal-container .input-group textarea {
             resize: none; /* Disable resizing */
-            height: 440px; /* Set a fixed height */
+            height: 435px; /* Set a fixed height */
         }
 
         .project-modal-container .input-group input:focus,
         .project-modal-container .input-group textarea:focus {
-            background: var(--secondary);
+            background: rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .project-modal-container .input-group label {
+            color: var(--accent); /* Change label color to accent */
         }
 
         .auth-btn.cancel {
