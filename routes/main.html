@@ -745,7 +745,6 @@
         <nav class="navbar">
             <div class="logo">EasyDay</div>
             <div>
-                <button class="logout-btn" id="addFriendsBtn">Add Friends</button>
                 <button class="logout-btn" id="logoutBtn">Logout</button>
             </div>
         </nav>
@@ -866,6 +865,8 @@
                 <label for="friendSearch">Search Username</label>
                 <input type="text" id="friendSearch" placeholder="Enter username">
             </div>
+            <button id="searchButton" class="auth-btn">Search</button> <!-- Add this line -->
+            <div id="searchResultsCount" style="color: var(--accent); margin-bottom: 1rem;"></div> <!-- Add this line -->
             <div class="search-results" id="friendSearchResults"></div>
             <button type="button" class="auth-btn cancel" onclick="closeFriendsModal()">Close</button>
         </div>
@@ -1247,9 +1248,6 @@
         });
         document.getElementById('addProject').addEventListener('click', openProjectModal);
         document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
-        document.getElementById('addFriendsBtn').addEventListener('click', () => {
-            document.getElementById('friendsModalContainer').style.display = 'flex';
-        });
 
         // Initialize views
         renderWeeklyCalendar();
@@ -1461,29 +1459,45 @@
         return response.json();
     }
 
-    function handleUserSearch(inputId, resultsId) {
+    function handleUserSearch(inputId, resultsId, buttonId) {
         const input = document.getElementById(inputId);
         const results = document.getElementById(resultsId);
+        const resultsCount = document.getElementById('searchResultsCount');
+        const searchButton = document.getElementById(buttonId);
 
-        input.addEventListener('input', async () => {
+        async function performSearch() {
             const query = input.value.trim();
             if (query.length > 0) {
                 const users = await searchUsers(query);
                 results.innerHTML = users.map(user => `<div data-username="${user.username}">${user.username}</div>`).join('');
+                resultsCount.textContent = `${users.length} result(s) found`;
             } else {
                 results.innerHTML = '';
+                resultsCount.textContent = '';
+            }
+        }
+
+        input.addEventListener('input', performSearch);
+
+        input.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                await performSearch();
             }
         });
+
+        searchButton.addEventListener('click', performSearch); // Add this line
 
         results.addEventListener('click', (e) => {
             if (e.target.dataset.username) {
                 input.value = e.target.dataset.username;
                 results.innerHTML = '';
+                resultsCount.textContent = '';
             }
         });
     }
 
-    handleUserSearch('friendSearch', 'friendSearchResults');
+    handleUserSearch('friendSearch', 'friendSearchResults', 'searchButton');
     </script>
 </body>
 </html>
