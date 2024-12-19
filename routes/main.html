@@ -618,6 +618,85 @@
     opacity: 0.3;
 }
 
+.friends-modal-container {
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--secondary);
+    border-radius: 15px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    flex-grow: 1;
+    overflow-y: auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    z-index: 1000;
+}
+
+.friends-modal-container .modal-content {
+    background: var(--secondary);
+    border-radius: 15px;
+    padding: 1rem;
+    width: 100%;
+    height: 100%;
+}
+
+.friends-modal-container .input-group {
+    margin-bottom: 1rem;
+}
+
+.friends-modal-container .input-group input {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%;
+    color: var(--text);
+}
+
+.friends-modal-container .input-group input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.friends-modal-container .search-results {
+    background: var(--secondary);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.friends-modal-container .search-results div {
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.friends-modal-container .search-results div:hover {
+    background: var(--primary);
+    color: var(--accent);
+}
+
+.modal-content .input-group label {
+    color: var(--accent); /* Change label color to accent */
+}
+
+.input-group-inline {
+    display: flex;
+    gap: 1rem;
+}
+
+.input-group-inline .input-group {
+    flex: 1;
+}
+
     </style>
 </head>
 <body>
@@ -665,7 +744,10 @@
     <div class="main-container" id="mainPage">
         <nav class="navbar">
             <div class="logo">EasyDay</div>
-            <button class="logout-btn" id="logoutBtn">Logout</button>
+            <div>
+                <button class="logout-btn" id="addFriendsBtn">Add Friends</button>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
         </nav>
         <div class="content">
             <div class="vertical-calendar">
@@ -712,7 +794,7 @@
                                 <label for="projectContent">Content</label>
                                 <textarea id="projectContent" rows="4" required></textarea>
                             </div>
-                            <button type="submit" class="auth-btn">Add</button>
+                            <button type="submit" class="auth-btn">Save</button>
                             <button type="button" class="auth-btn cancel" onclick="closeProjectModal()">Cancel</button>
                         </form>
                     </div>
@@ -729,22 +811,24 @@
                     <label for="itemName">Name</label>
                     <input type="text" id="itemName" required>
                 </div>
-                <div class="input-group">
-                    <label>Type</label>
-                    <select id="itemType">
-                        <option value="task">Task</option>
-                        <option value="event">Event</option>
-                    </select>
+                <div class="input-group-inline">
+                    <div class="input-group">
+                        <label>Type</label>
+                        <select id="itemType">
+                            <option value="task">Task</option>
+                            <option value="event">Event</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Repeat</label>
+                        <select id="itemRepeat">
+                            <option value="none">No repeat</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>Repeat</label>
-                    <select id="itemRepeat">
-                        <option value="none">No repeat</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                    </select>
-                </div>
-                <button type="submit" class="auth-btn">Add</button>
+                <button type="submit" class="auth-btn">Save</button>
                 <button type="button" class="auth-btn cancel" onclick="closeModal('taskModal')">Cancel</button>
             </form>
         </div>
@@ -765,7 +849,7 @@
                     <label for="projectContent">Content</label>
                     <textarea id="projectContent" rows="4" required></textarea>
                 </div>
-                <button type="submit" class="auth-btn">Add</button>
+                <button type="submit" class="auth-btn">Save</button>
                 <button type="button" class="auth-btn cancel" onclick="closeModal('projectModal')">Cancel</button>
             </form>
         </div>
@@ -774,6 +858,17 @@
     <div class="context-menu" id="contextMenu">
         <div class="context-menu-item" data-action="open">Open</div>
         <div class="context-menu-item" data-action="delete">Delete</div>
+    </div>
+
+    <div class="friends-modal-container" id="friendsModalContainer">
+        <div class="modal-content">
+            <div class="input-group">
+                <label for="friendSearch">Search Username</label>
+                <input type="text" id="friendSearch" placeholder="Enter username">
+            </div>
+            <div class="search-results" id="friendSearchResults"></div>
+            <button type="button" class="auth-btn cancel" onclick="closeFriendsModal()">Close</button>
+        </div>
     </div>
 
     <script>
@@ -1152,6 +1247,9 @@
         });
         document.getElementById('addProject').addEventListener('click', openProjectModal);
         document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
+        document.getElementById('addFriendsBtn').addEventListener('click', () => {
+            document.getElementById('friendsModalContainer').style.display = 'flex';
+        });
 
         // Initialize views
         renderWeeklyCalendar();
@@ -1353,6 +1451,39 @@
         if (diffDays < 7) return targetDate.toLocaleDateString('en-GB', { weekday: 'long' });
         return `Next ${diffDays} days`;
     }
+
+    function closeFriendsModal() {
+        document.getElementById('friendsModalContainer').style.display = 'none';
+    }
+
+    async function searchUsers(query) {
+        const response = await fetch(`/search-users?query=${query}`);
+        return response.json();
+    }
+
+    function handleUserSearch(inputId, resultsId) {
+        const input = document.getElementById(inputId);
+        const results = document.getElementById(resultsId);
+
+        input.addEventListener('input', async () => {
+            const query = input.value.trim();
+            if (query.length > 0) {
+                const users = await searchUsers(query);
+                results.innerHTML = users.map(user => `<div data-username="${user.username}">${user.username}</div>`).join('');
+            } else {
+                results.innerHTML = '';
+            }
+        });
+
+        results.addEventListener('click', (e) => {
+            if (e.target.dataset.username) {
+                input.value = e.target.dataset.username;
+                results.innerHTML = '';
+            }
+        });
+    }
+
+    handleUserSearch('friendSearch', 'friendSearchResults');
     </script>
 </body>
 </html>
