@@ -1162,27 +1162,22 @@
     elements.contextMenu.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
         if (action === 'open' && state.contextTarget) {
-            const taskId = parseInt(state.contextTarget);
-            const task = findTaskById(taskId);
-            if (task) {
-                openTaskModal(task.date, task.time, task);
+            const projectId = parseInt(state.contextTarget);
+            const project = state.projects.find(p => p.id === projectId);
+            if (project) {
+                document.getElementById('projectName').value = project.name;
+                document.getElementById('projectDeadline').value = project.deadline;
+                document.getElementById('projectContent').value = project.content;
+                elements.projectForm.dataset.projectId = project.id;
+                openProjectModal();
             }
         } else if (action === 'delete' && state.contextTarget) {
-            deleteTask(state.contextTarget);
-            renderWeeklyCalendar();
+            state.projects = state.projects.filter(p => p.id !== parseInt(state.contextTarget));
+            saveUserData();
+            renderProjects();
         }
         elements.contextMenu.style.display = 'none';
     });
-
-    function findTaskById(taskId) {
-        for (const date in state.tasks) {
-            for (const time in state.tasks[date]) {
-                const task = state.tasks[date][time].find(t => t.id === taskId);
-                if (task) return task;
-            }
-        }
-        return null;
-    }
 
     // Additional utility functions
     function moveTask(taskId, oldDate, oldTime, newDate, newTime) {
@@ -1297,7 +1292,7 @@
         if (diffDays === 1) return 'Tomorrow';
         if (diffDays < 0) return 'Passed';
         if (diffDays < 7) return targetDate.toLocaleDateString('en-GB', { weekday: 'long' });
-        return `${diffDays} days`;
+        return `Next ${diffDays} days`;
     }
     </script>
 </body>
