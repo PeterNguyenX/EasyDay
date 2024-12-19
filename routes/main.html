@@ -472,10 +472,21 @@
             margin-bottom: 0.5rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            color: var(--text); /* Set text color */
         }
 
         .project-item:hover {
             background: rgba(255, 255, 255, 0.15);
+        }
+
+        .project-item .project-name {
+            font-weight: bold; /* Make name bolder */
+        }
+
+        .project-item .project-deadline {
+            color: var(--text); /* Set text color */
+            opacity: 0.5;
+            font-size: 0.9rem;
         }
 
         .error-message {
@@ -1229,10 +1240,11 @@
 
     function renderProjects() {
         const projectsList = document.getElementById('projectsList');
-        projectsList.innerHTML = state.projects.map(project => `
+        const sortedProjects = state.projects.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        projectsList.innerHTML = sortedProjects.map(project => `
             <div class="project-item" data-project-id="${project.id}" oncontextmenu="openProjectContextMenu(event, ${project.id})">
-                <span>${project.name}</span>
-                <span>${new Date(project.deadline).toLocaleDateString('en-GB')}</span>
+                <div class="project-name">${project.name}</div>
+                <div class="project-deadline">Deadline: ${new Date(project.deadline).toLocaleDateString('en-GB')}</div>
             </div>
         `).join('');
     }
