@@ -1010,25 +1010,31 @@
         const content = document.getElementById('projectContent').value;
         const projectId = elements.projectForm.dataset.projectId;
 
-        if (projectId) {
-            const project = state.projects.find(p => p.id === parseInt(projectId));
-            project.name = name;
-            project.deadline = deadline;
-            project.content = content;
-        } else {
-            const project = {
-                id: Date.now(),
-                name,
-                deadline,
-                content
-            };
-            state.projects.push(project);
-        }
+        if (name && deadline && content) {
+            if (projectId && state.projects.some(p => p.id === parseInt(projectId))) {
+                const project = state.projects.find(p => p.id === parseInt(projectId));
+                project.name = name;
+                project.deadline = deadline;
+                project.content = content;
+            } else {
+                const project = {
+                    id: Date.now(), // Ensure unique ID
+                    name,
+                    deadline,
+                    content
+                };
+                state.projects.push(project); // Add new project to the state
+            }
 
-        saveUserData();
-        renderProjects();
-        closeProjectModal();
+            saveUserData(); // Save updated state to local storage
+            renderProjects(); // Update the UI with the new project
+            closeProjectModal(); // Close the project modal
+        } else {
+            alert("Please fill in all fields."); // Alert if any field is empty
+        }
     }
+
+    document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit); // Bind the submit event
 
     // Drag and Drop Implementation
     function setupDragAndDrop() {
