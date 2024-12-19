@@ -61,6 +61,7 @@
 
         .input-group {
             margin-bottom: 1rem;
+            position: relative; /* Add relative positioning */
         }
 
         .input-group label {
@@ -604,6 +605,19 @@
     border-radius: 14px;
 }
 
+.input-group .circle {
+    position: absolute;
+    right: 9.2px;
+    top: 48px;
+    transform: translateY(-50%);
+    width: 25px;
+    height: 25px;
+    background: var(--text);
+    border-radius: 50%;
+    pointer-events: none; /* Make it non-interactive */
+    opacity: 0.3;
+}
+
     </style>
 </head>
 <body>
@@ -692,6 +706,7 @@
                             <div class="input-group">
                                 <label for="projectDeadline">Deadline</label>
                                 <input type="date" id="projectDeadline" required>
+                                <div class="circle"></div> <!-- Add the circle element -->
                             </div>
                             <div class="input-group">
                                 <label for="projectContent">Content</label>
