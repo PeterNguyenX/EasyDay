@@ -9,7 +9,7 @@
         :root {
             --primary: #0A192F;
             --secondary: #172A46;
-            --accent: #64d8ff;
+            --accent: #64d8ffe2;
             --text: #CCD6F6;
             --card-bg: rgba(23, 42, 70, 0.8);
             --morning: #00cbfe8b;
@@ -424,7 +424,7 @@
             padding: 0.3rem;
             margin-bottom: 0.3rem;
             border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.323);
             cursor: pointer;
             transition: all 0.3s ease;
             justify-content: space-between; /* Add this line to space out the checkbox */
@@ -592,6 +592,12 @@
     margin-bottom: 15px;
     color: var(--accent);
     font-size: 1.5rem;
+}
+
+.current-day-row {
+    border: 4px solid var(--secondary);
+    outline: 4px solid var(--accent);
+    border-radius: 12px;
 }
 
     </style>
@@ -828,11 +834,12 @@
         weekDates.forEach(date => {
             const dateStr = date.toISOString().split('T')[0];
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            const isToday = date.toDateString() === new Date().toDateString();
             const { weekday, day, month, year } = formatDate(date);
             
             html += `
-                <div class="day-row ${isWeekend ? 'weekend' : ''}">
-                    <div class="date-box ${date.toDateString() === new Date().toDateString() ? 'current-day' : ''}">
+                <div class="day-row ${isWeekend ? 'weekend' : ''} ${isToday ? 'current-day-row' : ''}">
+                    <div class="date-box">
                         <div class="weekday">${weekday}</div>
                         <div class="day-month">${month} ${day}</div>
                         <div class="year">${year}</div>
