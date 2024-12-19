@@ -380,11 +380,11 @@
 
         /* Context Menu */
         .context-menu {
+            size: 150%;
             display: none;
             position: fixed;
             background: var(--secondary);
             border-radius: 8px;
-            padding: 0.5rem;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             z-index: 1000;
         }
@@ -393,12 +393,14 @@
             padding: 0.5rem 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            
         }
 
         .context-menu-item:hover {
-            background: var (--accent);
-            color: var (--primary);
+            background: var(--primary);
+            color: var(--accent);
             border-radius: 4px;
+            
         }
 
         /* Additional Styles */
@@ -985,15 +987,23 @@
         const name = document.getElementById('projectName').value;
         const deadline = document.getElementById('projectDeadline').value;
         const content = document.getElementById('projectContent').value;
+        const projectId = elements.projectForm.dataset.projectId;
 
-        const project = {
-            id: Date.now(),
-            name,
-            deadline,
-            content
-        };
+        if (projectId) {
+            const project = state.projects.find(p => p.id === parseInt(projectId));
+            project.name = name;
+            project.deadline = deadline;
+            project.content = content;
+        } else {
+            const project = {
+                id: Date.now(),
+                name,
+                deadline,
+                content
+            };
+            state.projects.push(project);
+        }
 
-        state.projects.push(project);
         saveUserData();
         renderProjects();
         closeProjectModal();
@@ -1112,34 +1122,46 @@
 
     // Context Menu
     document.addEventListener('contextmenu', (e) => {
-        if (e.target.closest('.task-item') || e.target.closest('.event-item')) {
+        if (e.target.closest('.task-item') || e.target.closest('.event-item') || e.target.closest('.project-item')) {
             e.preventDefault();
             const contextMenu = elements.contextMenu;
             contextMenu.style.display = 'block';
             contextMenu.style.left = `${e.pageX}px`;
             contextMenu.style.top = `${e.pageY}px`;
-            state.contextTarget = e.target.closest('.task-item, .event-item');
+            state.contextTarget = e.target.closest('.task-item, .event-item, .project-item').dataset.projectId || e.target.closest('.task-item, .event-item').dataset.taskId;
         }
     });
 
-    document.addEventListener('click', () => {
-        elements.contextMenu.style.display = 'none';
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.context-menu')) {
+            elements.contextMenu.style.display = 'none';
+        }
     });
 
     elements.contextMenu.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
         if (action === 'open' && state.contextTarget) {
-            const taskId = parseInt(state.contextTarget.dataset.taskId);
-            const date = state.contextTarget.dataset.date;
-            const time = state.contextTarget.dataset.time;
-            const task = state.tasks[date][time].find(t => t.id === taskId);
-            openTaskModal(date, time, task);
+            const taskId = parseInt(state.contextTarget);
+            const task = findTaskById(taskId);
+            if (task) {
+                openTaskModal(task.date, task.time, task);
+            }
         } else if (action === 'delete' && state.contextTarget) {
-            deleteTask(state.contextTarget.dataset.taskId);
+            deleteTask(state.contextTarget);
             renderWeeklyCalendar();
         }
         elements.contextMenu.style.display = 'none';
     });
+
+    function findTaskById(taskId) {
+        for (const date in state.tasks) {
+            for (const time in state.tasks[date]) {
+                const task = state.tasks[date][time].find(t => t.id === taskId);
+                if (task) return task;
+            }
+        }
+        return null;
+    }
 
     // Additional utility functions
     function moveTask(taskId, oldDate, oldTime, newDate, newTime) {
@@ -1208,11 +1230,39 @@
     function renderProjects() {
         const projectsList = document.getElementById('projectsList');
         projectsList.innerHTML = state.projects.map(project => `
-            <div class="project-item">
+            <div class="project-item" data-project-id="${project.id}" oncontextmenu="openProjectContextMenu(event, ${project.id})">
                 <span>${project.name}</span>
                 <span>${new Date(project.deadline).toLocaleDateString('en-GB')}</span>
             </div>
         `).join('');
+    }
+
+    function openProjectContextMenu(event, projectId) {
+        event.preventDefault();
+        const contextMenu = elements.contextMenu;
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${event.pageX}px`;
+        contextMenu.style.top = `${event.pageY}px`;
+        state.contextTarget = projectId;
+    }
+
+    function handleProjectContextMenuClick(action) {
+        const projectId = state.contextTarget;
+        if (action === 'open') {
+            const project = state.projects.find(p => p.id === projectId);
+            if (project) {
+                document.getElementById('projectName').value = project.name;
+                document.getElementById('projectDeadline').value = project.deadline;
+                document.getElementById('projectContent').value = project.content;
+                elements.projectForm.dataset.projectId = project.id;
+                openProjectModal();
+            }
+        } else if (action === 'delete') {
+            state.projects = state.projects.filter(p => p.id !== projectId);
+            saveUserData();
+            renderProjects();
+        }
+        elements.contextMenu.style.display = 'none';
     }
     </script>
 </body>
