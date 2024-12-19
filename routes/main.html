@@ -380,7 +380,7 @@
 
         /* Context Menu */
         .context-menu {
-            size: 150%;
+            size: 3rem;
             display: none;
             position: fixed;
             background: var(--secondary);
@@ -399,7 +399,7 @@
         .context-menu-item:hover {
             background: var(--primary);
             color: var(--accent);
-            border-radius: 4px;
+            border-radius: 8px;
             
         }
 
@@ -1165,11 +1165,7 @@
             const projectId = parseInt(state.contextTarget);
             const project = state.projects.find(p => p.id === projectId);
             if (project) {
-                document.getElementById('projectName').value = project.name;
-                document.getElementById('projectDeadline').value = project.deadline;
-                document.getElementById('projectContent').value = project.content;
-                elements.projectForm.dataset.projectId = project.id;
-                openProjectModal();
+                openProjectModal(project);
             }
         } else if (action === 'delete' && state.contextTarget) {
             state.projects = state.projects.filter(p => p.id !== parseInt(state.contextTarget));
@@ -1231,7 +1227,18 @@
         }
     }
 
-    function openProjectModal() {
+    function openProjectModal(project = null) {
+        if (project) {
+            document.getElementById('projectName').value = project.name || "";
+            document.getElementById('projectDeadline').value = project.deadline || "";
+            document.getElementById('projectContent').value = project.content || "";
+            elements.projectForm.dataset.projectId = project.id;
+        } else {
+            elements.projectForm.reset();
+            document.getElementById('projectName').placeholder = "Name";
+            document.getElementById('projectContent').placeholder = "Content";
+            delete elements.projectForm.dataset.projectId;
+        }
         document.getElementById('monthlyCalendarContainer').style.display = 'none';
         document.getElementById('projectsSection').style.display = 'none';
         document.getElementById('projectModalContainer').style.display = 'flex';
