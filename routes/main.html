@@ -9,14 +9,14 @@
         :root {
             --primary: #0A192F;
             --secondary: #172A46;
-            --accent: #64FFDA;
+            --accent: #64d8ff;
             --text: #CCD6F6;
             --card-bg: rgba(23, 42, 70, 0.8);
-            --morning: rgba(100, 255, 218, 0.2);
-            --noon: rgba(100, 255, 218, 0.15);
-            --night: rgba(100, 255, 218, 0.1);
+            --morning: #00cbfe8b;
+            --noon: #00aeff93;
+            --night: #1e8fff91;
             --weekend: rgba(23, 42, 70, 0.9);
-            --weekend-text: #ffc400;
+            --weekend-text: #1E90FF;
         }
 
         * {
@@ -338,9 +338,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
+            font-size: 2rem;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+           
             transition: all 0.3s ease;
         }
 
@@ -450,8 +450,9 @@
             transform: translate(-50%, -50%);
             opacity: 0;
             transition: all 0.3s ease;
-            background: var(--accent);
-            color: var(--primary);
+            background: var(--primary);
+            color: var(--text);
+            font-size: 1.5rem;
             border: none;
             width: 30px;
             height: 30px;
@@ -589,6 +590,8 @@
         
 .heading-with-margin {
     margin-bottom: 15px;
+    color: var(--accent);
+    font-size: 1.5rem;
 }
 
     </style>
@@ -727,7 +730,7 @@
             <form id="projectForm">
                 <div class="input-group">
                     <label for="projectName">Name</label>
-                    <input type="text" id="projectName" required>
+                    <input type="text" id="projectName" placeholder="Project Name">
                 </div>
                 <div class="input-group">
                     <label for="projectDeadline">Deadline</label>
@@ -1244,7 +1247,7 @@
         projectsList.innerHTML = sortedProjects.map(project => `
             <div class="project-item" data-project-id="${project.id}" oncontextmenu="openProjectContextMenu(event, ${project.id})">
                 <div class="project-name">${project.name}</div>
-                <div class="project-deadline">Deadline: ${new Date(project.deadline).toLocaleDateString('en-GB')}</div>
+                <div class="project-deadline">Deadline: ${formatRelativeDate(project.deadline)}</div>
             </div>
         `).join('');
     }
@@ -1275,6 +1278,19 @@
             renderProjects();
         }
         elements.contextMenu.style.display = 'none';
+    }
+
+    function formatRelativeDate(date) {
+        const today = new Date();
+        const targetDate = new Date(date);
+        const diffTime = targetDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Tomorrow';
+        if (diffDays < 0) return 'Passed';
+        if (diffDays < 7) return targetDate.toLocaleDateString('en-GB', { weekday: 'long' });
+        return `${diffDays} days`;
     }
     </script>
 </body>
