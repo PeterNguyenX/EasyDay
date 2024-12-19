@@ -327,10 +327,10 @@
 
         .add-project-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 40px;
-            height: 40px;
+            top: -3px;
+            right: 0px;
+            width: 30px;
+            height: 30px;
             border-radius: 8px; /* Make it a square with rounded corners */
             background: var(--accent);
             color: var(--primary);
@@ -573,6 +573,11 @@
             background: var(--secondary);
             color: var(--accent);
         }
+        
+.heading-with-margin {
+    margin-bottom: 15px;
+}
+
     </style>
 </head>
 <body>
@@ -646,7 +651,7 @@
                 </div>
                 <div class="projects-section" id="projectsSection">
                     <div class="projects-header" style="position: relative;">
-                        <h3>Projects</h3>
+                        <h3 class="heading-with-margin">Projects</h3>
                         <button id="addProject" class="add-project-btn">+</button>
                     </div>
                     <div id="projectsList"></div>
@@ -678,7 +683,6 @@
     <!-- Modals -->
     <div class="modal" id="taskModal">
         <div class="modal-content">
-            <h3>Add Item</h3>
             <form id="taskForm">
                 <div class="input-group">
                     <label for="itemName">Name</label>
@@ -982,24 +986,17 @@
         const deadline = document.getElementById('projectDeadline').value;
         const content = document.getElementById('projectContent').value;
 
-        fetch('/api/projects', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, deadline, content })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.id) {
-                state.projects.push({ id: data.id, name, deadline, content });
-                renderProjects();
-                closeModal('projectModal');
-            } else {
-                console.error('Failed to create project');
-            }
-        })
-        .catch(error => console.error('Error:', error));
+        const project = {
+            id: Date.now(),
+            name,
+            deadline,
+            content
+        };
+
+        state.projects.push(project);
+        saveUserData();
+        renderProjects();
+        closeProjectModal();
     }
 
     // Drag and Drop Implementation
@@ -1206,6 +1203,16 @@
         document.getElementById('monthlyCalendarContainer').style.display = 'block';
         document.getElementById('projectsSection').style.display = 'block';
         document.getElementById('projectModalContainer').style.display = 'none';
+    }
+
+    function renderProjects() {
+        const projectsList = document.getElementById('projectsList');
+        projectsList.innerHTML = state.projects.map(project => `
+            <div class="project-item">
+                <span>${project.name}</span>
+                <span>${new Date(project.deadline).toLocaleDateString('en-GB')}</span>
+            </div>
+        `).join('');
     }
     </script>
 </body>
