@@ -244,18 +244,6 @@ app.delete('/api/projects/:id', isAuthenticated, (req, res) => {
       });
 });
 
-// Endpoint to search for users
-app.get('/search-users', (req, res) => {
-    const query = req.query.query;
-    db.all('SELECT username FROM users WHERE username LIKE ?', [`%${query}%`], (err, rows) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        res.json(rows);
-    });
-});
-
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
