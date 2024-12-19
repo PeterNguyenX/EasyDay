@@ -1155,7 +1155,8 @@
             contextMenu.style.display = 'block';
             contextMenu.style.left = `${e.pageX}px`;
             contextMenu.style.top = `${e.pageY}px`;
-            state.contextTarget = e.target.closest('.task-item, .event-item, .project-item').dataset.projectId || e.target.closest('.task-item, .event-item').dataset.taskId;
+            state.contextTarget = e.target.closest('.task-item, .event-item, .project-item').dataset.taskId || e.target.closest('.project-item').dataset.projectId;
+            state.contextType = e.target.closest('.task-item, .event-item') ? 'task' : 'project';
         }
     });
 
@@ -1168,18 +1169,44 @@
     elements.contextMenu.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
         if (action === 'open' && state.contextTarget) {
-            const projectId = parseInt(state.contextTarget);
-            const project = state.projects.find(p => p.id === projectId);
-            if (project) {
-                openProjectModal(project);
+            if (state.contextType === 'task') {
+                const taskId = parseInt(state.contextTarget);
+                const task = findTaskById(taskId);
+                if (task) {
+                    openTaskModal(task.date, task.time, task);
+                }
+            } else if (state.contextType === 'project') {
+                const projectId = parseInt(state.contextTarget);
+                const project = state.projects.find(p => p.id === projectId);
+                if (project) {
+                    openProjectModal(project);
+                }
             }
         } else if (action === 'delete' && state.contextTarget) {
-            state.projects = state.projects.filter(p => p.id !== parseInt(state.contextTarget));
-            saveUserData();
-            renderProjects();
+            if (state.contextType === 'task') {
+                const taskId = parseInt(state.contextTarget);
+                deleteTask(taskId);
+                renderWeeklyCalendar();
+            } else if (state.contextType === 'project') {
+                state.projects = state.projects.filter(p => p.id !== parseInt(state.contextTarget));
+                saveUserData();
+                renderProjects();
+            }
         }
         elements.contextMenu.style.display = 'none';
     });
+
+    function findTaskById(taskId) {
+        for (const date in state.tasks) {
+            for (const time in state.tasks[date]) {
+                const task = state.tasks[date][time].find(t => t.id === taskId);
+                if (task) {
+                    return task;
+                }
+            }
+        }
+        return null;
+    }
 
     // Additional utility functions
     function moveTask(taskId, oldDate, oldTime, newDate, newTime) {
