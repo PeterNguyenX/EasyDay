@@ -583,8 +583,9 @@
             box-shadow: 0 0 0 2px var(--accent);
         }
 
-        .project-modal-container .input-group label {
+        .input-group label {
             color: var(--accent); /* Change label color to accent */
+            font-weight: bold;
         }
 
         .auth-btn.cancel {
@@ -616,6 +617,25 @@
     border-radius: 50%;
     pointer-events: none; /* Make it non-interactive */
     opacity: 0.3;
+}
+
+.project-modal-container .input-group textarea,
+#taskModal .input-group textarea {
+    background: rgba(255, 255, 255, 0.1); /* Change background color to grey */
+    border: none; /* Remove border */
+    border-radius: 8px;
+    padding: 0.8rem;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%; /* Make the width match */
+    color: var(--text); /* Set text color */
+    resize: none; /* Disable resizing */
+}
+
+.project-modal-container .input-group textarea:focus,
+#taskModal .input-group textarea:focus {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 2px var(--accent);
 }
 
     </style>
@@ -712,7 +732,7 @@
                                 <label for="projectContent">Content</label>
                                 <textarea id="projectContent" rows="4" required></textarea>
                             </div>
-                            <button type="submit" class="auth-btn">Add</button>
+                            <button type="submit" class="auth-btn">Save</button>
                             <button type="button" class="auth-btn cancel" onclick="closeProjectModal()">Cancel</button>
                         </form>
                     </div>
@@ -729,22 +749,28 @@
                     <label for="itemName">Name</label>
                     <input type="text" id="itemName" required>
                 </div>
-                <div class="input-group">
-                    <label>Type</label>
-                    <select id="itemType">
-                        <option value="task">Task</option>
-                        <option value="event">Event</option>
-                    </select>
+                <div class="input-group" style="display: flex; gap: 1rem;">
+                    <div style="flex: 1;">
+                        <label>Type</label>
+                        <select id="itemType">
+                            <option value="task">Task</option>
+                            <option value="event">Event</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Repeat</label>
+                        <select id="itemRepeat">
+                            <option value="none">No repeat</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="input-group">
-                    <label>Repeat</label>
-                    <select id="itemRepeat">
-                        <option value="none">No repeat</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                    </select>
+                    <label for="itemDescription">Description</label>
+                    <textarea id="itemDescription" rows="4"></textarea>
                 </div>
-                <button type="submit" class="auth-btn">Add</button>
+                <button type="submit" class="auth-btn">Save</button>
                 <button type="button" class="auth-btn cancel" onclick="closeModal('taskModal')">Cancel</button>
             </form>
         </div>
@@ -765,7 +791,7 @@
                     <label for="projectContent">Content</label>
                     <textarea id="projectContent" rows="4" required></textarea>
                 </div>
-                <button type="submit" class="auth-btn">Add</button>
+                <button type="submit" class="auth-btn">Save</button>
                 <button type="button" class="auth-btn cancel" onclick="closeModal('projectModal')">Cancel</button>
             </form>
         </div>
@@ -951,16 +977,23 @@
             document.getElementById('itemName').value = task.name;
             document.getElementById('itemType').value = task.type;
             document.getElementById('itemRepeat').value = task.repeat;
+            document.getElementById('itemDescription').value = task.description || '';
             elements.taskForm.dataset.taskId = task.id;
             elements.itemRepeat.disabled = true;
             elements.itemRepeat.classList.add('locked');
             elements.itemRepeat.title = "Repetition cannot be edited";
+            document.getElementById('itemType').disabled = true;
+            document.getElementById('itemType').classList.add('locked');
+            document.getElementById('itemType').title = "Type cannot be edited";
         } else {
             elements.taskForm.reset();
             delete elements.taskForm.dataset.taskId;
             elements.itemRepeat.disabled = false;
             elements.itemRepeat.classList.remove('locked');
             elements.itemRepeat.title = "";
+            document.getElementById('itemType').disabled = false;
+            document.getElementById('itemType').classList.remove('locked');
+            document.getElementById('itemType').title = "";
         }
         elements.taskModal.style.display = 'flex';
     }
@@ -974,6 +1007,7 @@
         const name = document.getElementById('itemName').value;
         const type = document.getElementById('itemType').value;
         const repeat = document.getElementById('itemRepeat').value;
+        const description = document.getElementById('itemDescription').value;
         const taskId = elements.taskForm.dataset.taskId;
 
         const task = {
@@ -981,6 +1015,7 @@
             name,
             type,
             repeat,
+            description,
             date: state.selectedDate,
             time: state.selectedTime
         };
