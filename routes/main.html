@@ -638,6 +638,11 @@
     box-shadow: 0 0 0 2px var(--accent);
 }
 
+.project-item.passed {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
     </style>
 </head>
 <body>
@@ -1340,8 +1345,17 @@
     function renderProjects() {
         const projectsList = document.getElementById('projectsList');
         const sortedProjects = state.projects.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-        projectsList.innerHTML = sortedProjects.map(project => `
+        const currentDate = new Date();
+        const upcomingProjects = sortedProjects.filter(project => new Date(project.deadline) >= currentDate);
+        const passedProjects = sortedProjects.filter(project => new Date(project.deadline) < currentDate);
+
+        projectsList.innerHTML = upcomingProjects.map(project => `
             <div class="project-item" data-project-id="${project.id}" oncontextmenu="openProjectContextMenu(event, ${project.id})">
+                <div class="project-name">${project.name}</div>
+                <div class="project-deadline">Deadline: ${formatRelativeDate(project.deadline)}</div>
+            </div>
+        `).join('') + passedProjects.map(project => `
+            <div class="project-item passed" data-project-id="${project.id}" oncontextmenu="openProjectContextMenu(event, ${project.id})">
                 <div class="project-name">${project.name}</div>
                 <div class="project-deadline">Deadline: ${formatRelativeDate(project.deadline)}</div>
             </div>
